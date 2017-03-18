@@ -1,0 +1,245 @@
+/* Try to hide Page Titles on login pages */
+#page-title,
+h1#page-title,
+h1.page-header{
+  display:none;
+}
+
+.login-heading
+{
+
+  background-color: ffec64;
+  background-repeat: repeat-x;
+}
+
+p.login-title{
+  font-weight:normal;
+  font-size:20px;
+  text-align: center;
+  margin:0;
+  background: -webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ffab23), color-stop(1, #ffec64) );
+  background: -moz-linear-gradient( center top, #ffab23 5%, #ffec64 100% );
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffab23', endColorstr='#ffec64');
+  background-repeat: repeat-x;
+}
+#user-login{
+  margin-bottom:2em;
+}
+#user-login .description{
+  font-size:11px;
+  color:#777;
+  padding-left:10px;
+}
+
+/* Field Icons */
+#edit-name
+{
+  background: #fff url("email.png") no-repeat 5px center;
+
+  background-size: 1em 1em;
+  text-indent:2em;
+  border: 1px solid #aaa;   
+}
+
+#edit-pass{ 
+  background: #fff url("password.png") no-repeat 5px center;
+  background-size: 1em 1em;
+  text-indent:2em;
+  border: 1px solid #aaa;
+}
+
+input#edit-submit{
+  background: -webkit-gradient( linear, left top, left bottom, color-stop(0.05, #ffab23), color-stop(1, #ffec64) );
+  background: -moz-linear-gradient( center top, #ffab23 5%, #ffec64 100% );
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffab23', endColorstr='#ffec64');
+  background-color: #ffab23;
+  border-radius: 6px;
+  display: inline-block;
+  color: #333333;
+}
+
+input#edit-submit:hover{
+  text-decoration: underline;
+  color: #23527c;
+}
+
+/* Forms */
+form#user-login
+{
+  height: 100%;
+}
+
+form#user-login.user-login > div
+{
+  height: 300px;
+}
+
+form#user-login.user-login > div.messages{
+  height: 69px;
+}
+div.login-border{
+  border-top: 1px solid#888; 
+  font-size: 85%;
+  width: 70%;
+  margin-left: 15%;
+}
+
+#user-login,
+#user-pass
+{
+  max-width:600px;
+  margin:0 auto;
+  border:5px solid #555;
+  padding:1em;
+}
+
+#user-login .actions-suffix{
+  position:relative;
+  bottom:-5px;
+  text-align: center;
+}
+
+#user-login #edit-actions{  
+  margin-top:-30px;
+  text-align: center;
+}
+
+#user-pass #edit-actions{  
+  margin-top:7px;
+  text-align: center;
+}
+
+#user-pass label,
+#user-login label{
+  display:block;
+  font-weight:normal;
+  font-size:.8em;
+}
+.form-item{
+  max-width:100%;
+  overflow:hidden;
+}
+
+div.actions-forget
+{
+  position: relative; 
+  bottom:-95px;
+  text-align: center;
+}
+
+.form-item-pass,
+p.forgot-password{
+  display:inline-block;  
+}
+p.super-login-password{
+  font-size:.9em;
+  margin:0 0 0 1em;
+}
+p.forgot-password{
+  margin-left:1em;
+}
+
+#user-pass .form-item.form-item-name,
+#user-login .form-item.form-item-name{
+  margin:1em 0;
+  width: 100%;
+}
+#user-login .form-item.form-item-pass{
+  margin:0;
+  width: 100%;
+}
+#capslockdiv{
+  height:1em;
+}
+
+#capslockdiv P{
+  color:#c61414;
+  margin:0;
+  background:url("warning.png") left center no-repeat;
+  background-size: 1em 1em;
+  text-indent:1.25em;
+  font-size:.75em;
+  margin-top:.5em;
+  margin-left:1.5em;  
+}
+
+#user-login .messages,
+#user-pass .messages{
+  margin:0 0 1em 0;
+}
+
+.back-to-login{
+  font-size:.9em;
+  float:right;
+  margin:0 1em .125em 0;
+}
+
+input.form-text{
+  border: 2px solid #dadada;  
+}
+
+input.form-text:focus { 
+  outline: none;
+  border-color: #0088cc;
+  box-shadow: 0 0 8px #9ecaed;
+}
+
+input.form-control{
+  display:inline;
+  width:auto;
+}
+
+/* Remove Chrome's autofill yellow */
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+}
+
+.section-user .l-main .l-content{
+  background-color: transparent;
+}
+
+#user-login, #user-pass{
+  background-color: #fcfcfc;
+  border:1px solid #cccccc;
+  border-radius:3px;
+  padding: 0;
+}
+
+
+#user-login .form-item,
+#user-pass .form-item{
+  padding: 0 1em;
+}
+
+#user-login .form-item label,
+#user-pass .form-item label{
+  display: none;
+}
+
+#user-login .form-item .form-text,
+#user-pass .form-item .form-text{
+  color: #222222;
+  font-size: 18px;
+  text-transform: lowercase;
+}
+
+#user-login .form-action.form-wrapper,
+#user-pass .form-action.form-wrapper{
+  text-align: center;
+}
+
+#user-login .form-action.form-wrapper .form-submit,
+#user-pass .form-action.form-wrapper .form-submit{
+  background-color: #ffcc55;
+  border-radius: 4px;
+  color: #222222;
+}
+
+@media all and (max-width:480px) {
+  form#user-login{
+    height: 400px;
+  }
+  div.actions-forget{
+    bottom: -135px;
+  }
+}
