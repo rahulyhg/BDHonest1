@@ -1,0 +1,294 @@
+// Import external libraries.
+@import "compass";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+@import "../../variables/**/*";
+@import "../../mixins/**/*";
+@import "../../abstractions/**/*";
+
+.ui.modal.course-content-modal {
+	height: 100%;
+
+	> .content {
+		font-size: 1.2rem;
+		line-height: 2rem;
+
+		@include breakpoint($tab) {
+			font-size: 1.3rem;
+			line-height: 2rem;
+		}
+	}
+
+	.info-table {
+		font-size: .9em;
+	}
+}
+
+.lesson-completion-material.text-container {
+	text-align: center;
+
+	img {
+		display: block;
+		margin: 0 auto;
+	}
+}
+
+.text-container {
+	margin: 1rem;
+
+	@include breakpoint($tab) {
+		margin: 2rem;
+	}
+}
+
+.bx-wrapper {
+	margin: 0 !important;
+}
+
+.slide-holder {
+	@include clearfix();
+	background-color: $white;
+}
+
+.ui.message.exercise-message {
+	font-size: 1rem;
+
+	.header {
+		margin-bottom: .3em;
+	}
+}
+
+.quiz-question {
+
+	margin: 1rem;
+
+	@include breakpoint($tab) {
+		margin: 2rem 6rem;
+	}
+
+	@include breakpoint($desk) {
+		margin: 2rem 10rem;
+	}
+
+	// padding-bottom: 5em;
+
+	.question {
+		@include clearfix();
+	}
+}
+
+.question-content {
+
+	.options {
+		margin-left: 1em;
+	}
+
+	input[type="radio"],
+	input[type="checkbox"] {
+		margin-right: 1em;
+	}
+
+	.option-label {
+	   display: block;
+	   padding: .4em .6em;
+	   border-radius: 4px;
+	   cursor: pointer;
+
+	   &:hover {
+		   background-color: $light-grey;
+	   }
+
+	   &.blurred {
+		   opacity: .25;
+	   }
+
+	   &.correct {
+		   background-color: $light-grey;
+	   }
+
+	   .icon {
+		   margin-left: .5em;
+	   }
+	}
+
+	.match-hint {
+		color: $disabled-grey;
+		font-size: .8em;
+	}
+
+	.match-items {
+		width: 45%;
+		margin-right: 5%;
+		float: left;
+	}
+
+	.match-options {
+		width: 50%;
+		float: left;
+	}
+
+	.match-item,
+	.match-option {
+		font-size: .9em;
+		display: block;
+		text-align: left;
+		padding: .4em .6em;
+		border-radius: 2px;
+		margin-bottom: .5em;
+		transition: background-color .3s ease, box-shadow .3s ease, height .3s ease;
+	}
+
+	.match-item {
+		cursor: pointer;
+		background-color: $theme-color-2-light-1;
+		color: rgba($white, .9);
+
+		&.disabled {
+			background-color: rgba($theme-color-2, .5);
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			-ms-user-select: none;
+			user-select: none;
+		}
+
+		.icon {
+			float: right;
+		}
+	}
+
+	.match-option {
+		padding: 1em;
+		background-color: $light-grey;
+		border: 1px solid $border-grey;
+
+		.option-text {
+			font-weight: bold;
+		}
+
+		.correct-item {
+			font-size: .9em;
+			/* background-color: #064771; */
+			color: $white;
+			margin-bottom: .5em;
+			background-color: rgba($theme-color-2, .9);
+			padding: .5em;
+			border-radius: 2px;
+		}
+
+		&.items-added {
+			.option-text {
+				padding-bottom: .5em;
+				margin-bottom: 1em;
+				border-bottom: 1px solid rgba($mid-grey, .3);
+			}
+		}
+
+		&.hover {
+			background-color: rgba($pale-yellow, .5);
+		}
+
+		&.active {
+			border-color: rgba($theme-color-2, .5);
+			box-shadow: 1px 1px 3px rgba($theme-color-2, .8);
+		}
+	}
+}
+
+.course-material {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+.video-bg {
+	background-color: $black;
+
+	@include breakpoint($tab2) {
+		padding-right: 6%;
+		padding-left: 6%;
+	}
+}
+
+.video-wrapper {
+	position: relative;
+	padding-bottom: 56%; /* 16:9 */
+	height: 0;
+	overflow: hidden;
+
+	iframe {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+}
+
+.dummy-video {
+	min-height: 400px;
+	background-color: $black;
+}
+
+.audio-wrapper {
+
+	text-align: center;
+	z-index: 999;
+
+	@include breakpoint($desk) {
+		margin: 1em 0;
+		position: absolute;
+		top: .5em;
+		right: 2em;
+		width: 250px;
+	}
+
+	audio {
+		display: block;
+		margin: 0 auto;
+		width: 100%;
+		max-width: $mobile;
+	}
+
+	.ui.toggle.checkbox {
+		margin: 1em 0;
+		display: inline-block;
+		min-width: 25px;
+
+		@include breakpoint($desk) {
+			margin-top: 10px;
+			width: 20%;
+			float: left;
+
+			label {
+				float: left;
+			}
+		}
+	}
+
+	.audioplayer {
+		font-size: 75%;
+		border-radius: 2px;
+		opacity: .95;
+		display: block;
+		margin: 0 auto;
+
+		@include breakpoint($tab) {
+			width: 60%;
+			margin-right: 20%;
+			float: right;
+		}
+	}
+}

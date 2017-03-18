@@ -1,0 +1,1249 @@
+<?php
+
+module_load_include('inc', 'dss', 'dss.helper');
+
+function dss_breadcrumb($vars) {
+
+	$output = '<div id="breadcrumb" class="breadcrumb">'
+	. '<span prefix="v: http://rdf.data-vocabulary.org/#">';
+
+	foreach ($vars as $i => $value) {
+
+		if($i != 0) {
+			$output .= ' <span class="sep">»</span> ';
+		}
+
+		if($i == count($vars) - 1) {
+			$output .= '<span typeof="v:Breadcrumb"><span class="breadcrumb_last" property="v:title">' . $value['title'] . '</span></span>';
+		} else if(isset($value['url'])) {
+			$output .= '<span typeof="v:Breadcrumb"><a href="' . $value['url'] . '" rel="v:url" property="v:title">' . $value['title'] . '</a>';
+		} else {
+			$output .= '<span typeof="v:Breadcrumb" property="v:title">' . $value['title'] . '</span>';
+		}
+	}
+
+	$output .= '</span></div>';
+
+	return $output;
+}
+
+function dss_get_edit_link($id, $destination = '') {
+
+	if(!dss_is_content_editor()) {
+		return '';
+	}
+
+	$url = '/node/' . $id . '/edit';
+	if($destination) {
+		$url .= '?destination=' . $destination;
+	}
+	return ' &nbsp; <a href="' . $url . '" class="edit-link"></a>';
+}
+
+function dss_query_alter($query) {
+	if ($query->hasTag('debug')) {
+		dpm((string) $query);
+	}
+}
+
+function dss_get_course_progress_entity($user_id, $course_id, $wrapper = true) {
+
+	global $user;
+	$query = new EntityFieldQuery();
+
+	$query
+	->entityCondition('entity_type', 'node')
+	->propertyCondition('type', 'course_progress')
+	->propertyCondition('status', 1, '=')
+	->fieldCondition('field_course', 'target_id', $course_id, '=')
+	->propertyCondition('uid', $user_id)
+	->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+
+	$result = $query->execute();
+
+	$entity = null;
+
+	if (isset($result['node'])) {
+		$course_progress_nids = array_keys($result['node']);
+		$entities = entity_load('node', $course_progress_nids);
+		$entity = $entities[$course_progress_nids[0]];
+	}
+
+	// print_r($course_progress->field_current_lesson->value()); die();
+
+	if($entity == null) {
+		$course = node_load($course_id);
+		$course_progress = dss_create_course_progress($user, $course, true);
+	} else {
+		$course_progress = entity_metadata_wrapper('node', $entity);
+	}
+
+	// Check if the lesson is completed and its time to switch to new lesson
+	if($course_progress->field_current_lesson_percent_com->raw() == 100 && intval($course_progress->field_date_next_lesson_avail->raw()) <= time()) {
+
+		dd('Time to switch to next lesson');
+		$current_lesson = entity_metadata_wrapper('node', $course_progress->field_current_lesson->value());
+		$associated_chapter = entity_metadata_wrapper('node', $course_progress->field_current_chapter->value());
+		$associated_course = entity_metadata_wrapper('node', $course_progress->field_course->value());
+
+		dss_set_next_lesson($course_progress, $current_lesson, $associated_chapter, $associated_course, true);
+	}
+
+	if($wrapper) {
+		return $course_progress;
+	} else {
+		return $entity;
+	}
+}
+
+function dss_create_course_progress($user, $course, $enrolling_now = true) {
+
+	// $course_node = node_load(1);
+	// $course = entity_metadata_wrapper('node', $course_node);
+	// $course_id = $course->getIdentifier();
+	// $user_id = 122;
+
+	$user_id = $user->uid;
+	$course_id = $course->nid;
+
+	// Create a new entity
+	$values = array(
+		'type' => 'course_progress',
+		'uid' => $user_id,
+		'status' => 1, // published
+		'comment' => 0,
+		'promote' => 0,
+		);
+
+	$entity = entity_create('node', $values);
+	$course_progress = entity_metadata_wrapper('node', $entity);
+
+	$course_progress->title->set('Course progress for User: ' . $user_id . ', Course ID: ' . $course_id);
+	$course_progress->field_course->set(intval($course_id));
+
+	try {
+		$body_arr = json_decode($course_progress->body->value->value(array('decode' => true)), true);
+	} catch (Exception $e) {
+		// Handled below: $body_arr not set
+	}
+
+	if(!isset($body_arr)) {
+		// Reset
+		$body_arr = array(
+			'completed' => false,
+			'chapters' => array(),
+			);
+
+		$course_progress->field_current_chapter->set(0);
+		$course_progress->field_current_lesson->set(0);
+		$course_progress->field_current_course_material->set(0);
+		$course_progress->field_percent_completed->set(0);
+	}
+
+	// Get the current materials to set if null
+	$current_chapter = $course_progress->field_current_chapter->value();
+	$current_lesson = $course_progress->field_current_lesson->value();
+	$current_material = $course_progress->field_current_course_material->value();
+
+	$course = entity_metadata_wrapper('node', $course);
+	$chapter_nodes = $course->field_course_chapters->value();
+
+	foreach ($chapter_nodes as $chapter_node) {
+
+		$chapter = entity_metadata_wrapper('node', $chapter_node);
+		if(empty($current_chapter)) {
+			$current_chapter = $chapter;
+		}
+
+		if(!isset($body_arr['chapters'][$chapter->getIdentifier()])) {
+
+			$body_arr['chapters'][$chapter->getIdentifier()] = array(
+				'completed' => 0,
+				);
+		}
+
+		$lesson_nodes = $chapter->field_course_lessons->value();
+		foreach ($lesson_nodes as $lesson_node) {
+
+			$lesson = entity_metadata_wrapper('node', $lesson_node);
+			if(empty($current_lesson)) {
+				$current_lesson = $lesson;
+			}
+
+			if(!isset($body_arr['lessons'][$lesson->getIdentifier()])) {
+
+				$body_arr['lessons'][$lesson->getIdentifier()] = array(
+					'completed' => 0,
+					);
+			}
+
+			$material_nodes = $lesson->field_course_materials->value();
+			foreach ($material_nodes as $material_node) {
+
+				$material = entity_metadata_wrapper('node', $material_node);
+				if(empty($current_material)) {
+					$current_material = $material;
+				}
+
+
+				if(!isset($body_arr['materials'][$material->getIdentifier()])) {
+
+					$body_arr['materials'][$material->getIdentifier()] = array(
+						'completed' => 0,
+						);
+				}
+			}
+		}
+	}
+
+	// dpm($body_arr);
+
+	if(!empty($current_chapter)) {
+		$course_progress->field_current_chapter->set($current_chapter->getIdentifier());
+		$course_progress->field_current_chapter_number->set($current_chapter->field_chapter_number->raw());
+	}
+	if(!empty($current_lesson)) {
+		$course_progress->field_current_lesson->set($current_lesson->getIdentifier());
+		$course_progress->field_current_lesson_number->set($current_lesson->field_lesson_number->raw());
+	}
+	if(!empty($current_material)) {
+		$course_progress->field_current_course_material->set($current_material->getIdentifier());
+	}
+
+	// Create JSON
+	$body_content = json_encode($body_arr, JSON_PRETTY_PRINT);
+
+	$course_progress->body->set(array('value' => $body_content));
+
+	if($enrolling_now) {
+		$course_progress->field_date_enrolled->set(time());
+		$course_progress->field_percent_completed->set(0);
+		$course_progress->field_bonus->set(0);
+	}
+
+	$course_progress->field_date_next_lesson_avail->set((new DateTime())->getTimestamp());
+
+	$course_progress->save();
+	return $course_progress;
+}
+
+// HACK: uid
+// function dss_update_all_course_progress($course) {
+
+// 	$query = new EntityFieldQuery();
+
+// 	$query
+// 	->entityCondition('entity_type', 'node')
+// 	->propertyCondition('type', 'course_progress')
+// 	->fieldCondition('field_course', 'target_id', $course_id, '=')
+// 	->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+
+// 	if($user_id) {
+// 		$query
+// 		->propertyCondition('uid', 122);
+// 	}
+
+// 	$result = $query->execute();
+// 	// dpm($result);
+
+// 	$entity = null;
+
+// 	if (isset($result['node'])) {
+// 		$course_progress_nids = array_keys($result['node']);
+// 		$entities = entity_load('node', $course_progress_nids);
+// 		$entity = $entities[$course_progress_nids[0]];
+// 	}
+// }
+
+function dss_admin() {
+
+	$form = array();
+
+	$form['dss_progressstatus_notstarted_id'] = array(
+		'#type' => 'textfield',
+		'#title' => t('The term ID of "Not Started"'),
+		'#default_value' => variable_get('dss_progressstatus_notstarted_id', 18),
+		'#size' => 5,
+		'#maxlength' => 5,
+		'#description' => t('The term ID of the term "Not Started" in Progress Status taxonomy.'),
+		'#required' => TRUE,
+		);
+
+	$form['dss_disable_access_check_admin'] = array(
+		'#type' => 'checkbox',
+		'#title' => t('Disable access check for admin'),
+		'#default_value' => variable_get('dss_disable_access_check_admin', false),
+		'#description' => t('Check this if you want to disable course chapters and lessons access check for admin.'),
+		'#required' => FALSE,
+		);
+
+	return system_settings_form($form);
+}
+
+function dss_admin_validate($form, &$form_state) {
+	$maxdisp = $form_state['values']['dss_progressstatus_notstarted_id'];
+	if (!is_numeric($maxdisp)) {
+		form_set_error('dss_progressstatus_notstarted_id', t('You must enter an valid term ID.'));
+	}
+}
+function dss_views_post_execute(&$view) {	 
+	 if ($view->name =='forums' && !empty($view->result)) {
+	   drupal_goto('node/' . $view->result[0]->nid);
+	 }
+}
+
+function dss_menu() {
+
+	$items = array();
+
+	$items['admin/config/dss'] = array(
+		'title' => 'DSS module settings',
+		'description' => 'Configure the settings of custom DSS module.',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array('dss_admin'),
+		'access arguments' => array('administer dss settings'),
+		'type' => MENU_NORMAL_ITEM,
+		);
+
+	$items['resume/%'] = array(
+		'title' => 'Resume Current Lesson',
+		'description' => 'Will redirect to the current lesson page.',
+		'page callback' => 'dss_current_lesson_redirect',
+		'page arguments' => array(1),
+		'access callback' => TRUE,
+		);
+
+	// Called in lesson page
+	$items['api/material_viewed/%'] = array(
+		'title' => 'Course Material Viewed',
+		'description' => 'Will mark the course material as viewed in course progress.',
+		'page callback' => 'dss_course_material_viewed',
+		'page arguments' => array(2),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+
+	// Called in lesson page
+	$items['api/material_extra_viewed/%/%/%'] = array(
+		'title' => 'Extra Course Material Viewed',
+		'description' => 'Will mark the extra course material as viewed in course progress.',
+		'page callback' => 'dss_course_material_extra_viewed',
+		'page arguments' => array(2, 3, 4),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+
+	// Called in lesson page
+	$items['api/autoplay/%/%'] = array(
+		'title' => 'Set Autoplay',
+		'description' => 'Will set the autoplay value.',
+		'page callback' => 'dss_set_autoplay_value',
+		'page arguments' => array(2, 3),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+
+	// Called in course content page
+	$items['api/course_progress/%'] = array(
+		'title' => 'Course Progress API',
+		'description' => 'Course Progress of a user - JSON API',
+		'page callback' => 'dss_course_progress_api',
+		'page arguments' => array(2),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+
+	// Called in course content page
+	$items['api/chapter/%/lessons'] = array(
+		'title' => 'Course Progress API',
+		'description' => 'Course Progress of a user - JSON API',
+		'page callback' => 'dss_course_chapters_api',
+		'page arguments' => array(2),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+
+	// Called in lesson page - quiz
+	$items['api/exercise/%'] = array(
+		'title' => 'Exercise API',
+		'description' => 'Send Exercise data as JSON',
+		'page callback' => 'dss_exercise_data',
+		'page arguments' => array(2),
+		'access callback' => TRUE, // Should have been authenticated user
+		);
+	//
+	/*$items['user/%user/mypoints'] = array(
+    'title' => 'My Points',
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 4,
+     'page callback' => 'custom_points_page',    
+   	'access callback' => TRUE,
+  );*/
+
+	return $items;
+}
+function custom_points_page(){
+	global $base_url;
+   $css_path = $base_url .'/sites/all/themes/vedic/semantic/dist/semantic.css'; 
+   drupal_add_css($css_path, array('group' => CSS_THEME, 'type' => 'file', 'weight' => -125, 'preprocess' => FALSE )); 
+ global $user;
+ $uid = $user->uid;
+ $userpoints = "SELECT sum( points ) total_points FROM userpoints  WHERE uid =".$uid ."  GROUP BY uid ";
+ $points = db_query($userpoints)->fetchField();
+ $usedpoints_sql ="SELECT sum( points ) total_points FROM userpoints_txn where uid =".$uid ." and tid =75";
+ $usedpoints = abs(db_query($usedpoints_sql)->fetchField());
+ $points_text = 'Available ('.$points.' Points)';
+ $usedpoints_text = 'Used ('.$usedpoints.' Points)';
+ $content = '<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+   <div class="bonus-msg" style="text-align: center;"><p > <b> Bonus points Available : </b> '.$points .'</p> </div>
+  <div id="chart_div"></div>
+  <script type="text/javascript"> ';
+  $content .="
+  google.charts.load('current', {packages: ['corechart', 'bar']});
+google.charts.setOnLoadCallback(drawBarColors);
+
+function drawBarColors() {
+      var data = google.visualization.arrayToDataTable([    
+         ['Opening Move', 'Points',{ role: 'style' },{ role: 'annotation' }],
+          ['".$usedpoints_text."',".$usedpoints." ,'#e17c00',".$usedpoints."],
+          ['".$points_text."',".$points.",'#072b5f',".$points."],    
+]);
+
+        var options = {
+        	 title: 'Bonus Points',
+        	 chartArea: {width: '50%'},
+        	 colors: ['#072b5f', '#e17c00'],
+        	 is3D: true,
+        	 'legend':'left',
+        };
+      var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+  </script> ";
+  //return $content;
+  return theme('dss_points_settings', array('items' => $content)); 
+}
+function dss_menu_alter(&$items) {
+	unset($items['user/%user/points']);
+}
+
+function dss_set_autoplay_value($course_id, $val) {
+
+	global $user;
+	$user_id = $user->uid;
+
+	// Check if entity already exists
+	$course_progress = dss_get_course_progress_entity($user_id, $course_id, true);
+
+	// Create JSON
+	try {
+		$progress = json_decode($course_progress->body->value->value(array('decode' => TRUE)), true);
+	} catch (Exception $e) {
+		drupal_set_message(t('Error in Course Progress JSON'), 'error');
+	}
+
+	dss_set_autoplay($progress, $val);
+
+	$course_progress->body->set(array('value' => json_encode($progress, JSON_PRETTY_PRINT)));
+	$course_progress->save();
+
+	drupal_json_output($progress);
+}
+
+function dss_current_lesson_redirect($course_id) {
+
+	global $user;
+	$user_id = $user->uid;
+
+	// Check if entity already exists
+	// Check if entity already exists
+	$course_progress = dss_get_course_progress_entity($user_id, $course_id, true);
+
+	$options = array('absolute' => false);
+	drupal_goto('node/' . $course_progress->field_current_lesson->getIdentifier(), $options);
+}
+
+function dss_course_progress_api($course_id) {
+
+	global $user;
+	$user_id = $user->uid;
+
+	// Check if entity already exists
+	// Check if entity already exists
+	$course_progress = dss_get_course_progress_entity($user_id, $course_id, true);
+	// dpm($course_progress->getPropertyInfo());
+
+	if($course_progress == null) {
+		$data = (object) array();
+		drupal_json_output($data);
+		return;
+	}
+
+	$data = array(
+		'uid' => $course_progress->value()->uid,
+		'course_id' => $course_progress->field_course->raw(),
+		'date_enrolled' => $course_progress->field_date_enrolled->raw(),
+		'date_started' => $course_progress->field_date_started->raw(),
+		'current_chapter' => $course_progress->field_current_chapter->raw(),
+		'current_lesson' => $course_progress->field_current_lesson->raw(),
+		'current_course_material' => $course_progress->field_current_course_material->raw(),
+		'progress' => json_decode($course_progress->body->value->value(array('decode' => TRUE))),
+		'completed' => $course_progress->field_percent_completed->raw(),
+		);
+
+	drupal_json_output($data);
+}
+
+// NOTE that drupal_set_message or devel functions called in this function might be set after a page refresh due to bug in rb module
+function dss_course_material_viewed($course_material_node_nid) {
+
+	global $user;
+	$user_id = $user->uid;
+
+	if(!isset($user_id)) {
+		drupal_set_message(t('Invalid $user_id in dss_course_material_viewed.'), 'error');
+		return;
+	}
+
+	$course_material_node = node_load($course_material_node_nid);
+
+	$course_material = entity_metadata_wrapper('node', $course_material_node);
+	$associated_lesson = entity_metadata_wrapper('node', $course_material->field_associated_lesson->value());
+	$associated_chapter = entity_metadata_wrapper('node', $associated_lesson->field_associated_chapter->value());
+	$associated_course = entity_metadata_wrapper('node', $associated_chapter->field_associated_course->value());
+
+	$course_progress = dss_get_course_progress_entity($user_id, $associated_course->getIdentifier(), true);
+
+	if($course_progress == null) {
+		drupal_set_message(t('Error in tracking course progress.'), 'error');
+		return;
+	}
+
+	// Create JSON
+	try {
+		$progress = json_decode($course_progress->body->value->value(array('decode' => TRUE)), true);
+	} catch (Exception $e) {
+		drupal_set_message(t('Error in Course Progress JSON'), 'error');
+	}
+
+	$current_chapter = entity_metadata_wrapper('node', $course_progress->field_current_chapter->value());
+	$current_lesson = entity_metadata_wrapper('node', $course_progress->field_current_lesson->value());
+
+	// $change_cur = false; //check_material_accessible($course_progress, $associated_course, $associated_chapter, $associated_lesson, $current_chapter, $current_lesson);
+
+	// Save the previous values
+	$prev_current_lesson_percent_completed = dss_get_percent_completed_course_lesson($progress, $current_lesson);
+	$prev_course_percent_completed = $course_progress->field_percent_completed->raw();
+
+	// Set the completed for this course material
+	$progress['materials'][$course_material->getIdentifier()]['completed'] = 100;
+
+	// Calculate percent completed for associated lesson
+	$associated_lesson_course_materials = $associated_lesson->field_course_materials->raw();
+	$total = 0;
+	foreach ($associated_lesson_course_materials as $key => $associated_lesson_course_material_id) {
+		if(isset($progress['materials'][$associated_lesson_course_material_id]['completed'])) {
+			$total += $progress['materials'][$associated_lesson_course_material_id]['completed'];
+		}
+	}
+
+	$progress['lessons'][$associated_lesson->getIdentifier()]['completed'] = count($associated_lesson_course_materials) ? intval($total / count($associated_lesson_course_materials)) : 0;
+
+	// Calculate percent completed for associated chapter
+	$associated_chapter_lessons = $associated_chapter->field_course_lessons->raw();
+	$total = 0;
+	foreach ($associated_chapter_lessons as $key => $associated_chapter_lesson_id) {
+		if(isset($progress['lessons'][$associated_chapter_lesson_id]['completed'])) {
+			$total += $progress['lessons'][$associated_chapter_lesson_id]['completed'];
+		}
+	}
+
+	$progress['chapters'][$associated_chapter->getIdentifier()]['completed'] = count($associated_chapter_lessons) ? intval($total / count($associated_chapter_lessons)) : 0;
+
+	// Calculate percent completed for associated course
+	$associated_course_chapters = $associated_course->field_course_chapters->raw();
+	$total = 0;
+	foreach ($associated_course_chapters as $key => $associated_course_chapter_id) {
+		if(isset($progress['chapters'][$associated_course_chapter_id]['completed'])) {
+			$total += $progress['chapters'][$associated_course_chapter_id]['completed'];
+		}
+	}
+
+	$percent_completed = count($associated_course_chapters) ? intval($total / count($associated_course_chapters)) : 0;
+	$course_progress->field_percent_completed->set($percent_completed);
+
+	// Save now values
+	$now_current_lesson_percent_completed = dss_get_percent_completed_course_lesson($progress, $current_lesson);
+	$now_course_percent_completed = $percent_completed;
+
+	// Set the current lesson percent completed
+	$course_progress->field_current_lesson_percent_com->set($now_current_lesson_percent_completed);
+	
+	// Retrieving last lesson completed time
+	$last_completed = $course_progress->field_date_cur_lesson_completed->raw();
+
+	// If lesson got completed just now
+	if((empty($course_progress->field_date_cur_lesson_completed->value()) || $prev_current_lesson_percent_completed < 100) && $now_current_lesson_percent_completed == 100) {
+
+		$course_progress->field_date_cur_lesson_completed->set((new DateTime())->getTimestamp());
+
+		$mins = $associated_course->field_next_lesson_after->raw();
+		$user_timezone = drupal_get_user_timezone();
+		$cur_date = new DateTime("now", new DateTimeZone($user_timezone) );
+		$cur_day = $cur_date->format('l');
+		$last_sunday = (new DateTime('last sunday'))->setTimezone(new DateTimeZone($user_timezone))->getTimestamp();
+		
+		$weekly_counter = $course_progress->field_weekly_completed_lesson->raw();
+		
+		if(($last_completed < $last_sunday) || ($cur_day  == 'Sunday')){
+			$weekly_counter = 1;
+			$course_progress->field_weekly_completed_lesson->set($weekly_counter);
+		}
+		else {
+			$weekly_counter = $weekly_counter + 1;
+			$course_progress->field_weekly_completed_lesson->set($weekly_counter);
+		}
+
+		if($mins == 0) {
+			$course_progress->field_date_next_lesson_avail->set((new DateTime())->getTimestamp());
+			dss_set_next_lesson($course_progress, $associated_lesson, $associated_chapter, $associated_course);
+		} else {
+
+			// Set timezone to $user_timezone, add $mins and set time to midnight
+			//$available_date = (new DateTime())->setTimezone(new DateTimeZone($user_timezone))->add(new DateInterval('PT' . abs($mins) . 'M'));
+			if ($mins >= 1440) { // 1440 mins = one day
+				//$available_date->setTime(0, 0);
+			}
+			//$course_progress->field_date_next_lesson_avail->set($available_date->getTimestamp());
+		}
+		// Setting new lesson available date with respect to weekly lessons completed count
+		if($weekly_counter >= 5) {
+			$available_date = (new DateTime('sunday'))->setTimezone(new DateTimeZone($user_timezone))->add(new DateInterval('PT' . abs(30) . 'M'));
+		}
+		else {
+			$available_date = (new DateTime('tomorrow'))->setTimezone(new DateTimeZone($user_timezone))->add(new DateInterval('PT' . abs(30) . 'M'));
+		}
+		$course_progress->field_date_next_lesson_avail->set($available_date->getTimestamp());
+	}
+
+	// If course got completed just now
+	if(empty($associated_course->field_partial_content->value()) && (empty($course_progress->field_date_completed->value()) || $prev_course_percent_completed < 100) && $now_course_percent_completed == 100) {
+		$course_progress->field_date_completed->set($now);
+	}
+
+	// $progress->materials[$course_material->getIdentifier()] =
+
+	$course_progress->body->set(array('value' => json_encode($progress, JSON_PRETTY_PRINT)));
+	$course_progress->save();
+
+	drupal_json_output($progress);
+}
+
+function dss_course_material_extra_viewed($associated_course_id, $associated_lesson_id, $course_material_extra_id) {
+
+	global $user;
+	$user_id = $user->uid;
+
+	$course_progress = dss_get_course_progress_entity($user_id, $associated_course_id, true);
+
+	if($course_progress == null) {
+		drupal_set_message(t('Error in tracking course progress.'), 'error');
+		return;
+	}
+
+	// Create JSON
+	try {
+		$progress = json_decode($course_progress->body->value->value(array('decode' => TRUE)), true);
+	} catch (Exception $e) {
+		drupal_set_message(t('Error in Course Progress JSON'), 'error');
+	}
+
+	$progress['materials_extra']['lessons'][$associated_lesson_id][$course_material_extra_id]['completed'] = 100;
+
+	$course_progress->body->set(array('value' => json_encode($progress, JSON_PRETTY_PRINT)));
+	$course_progress->save();
+
+	drupal_json_output($progress);
+}
+
+function dss_set_next_lesson(&$course_progress, $current_lesson, $associated_chapter, $associated_course) {
+
+	$changed = false;
+
+	if(!empty($current_lesson->field_next_lesson->raw())) {
+
+		$next_lesson = entity_metadata_wrapper('node', $current_lesson->field_next_lesson->value());
+
+		$course_progress->field_current_lesson->set($next_lesson->getIdentifier());
+		$course_progress->field_current_lesson_number->set($next_lesson->field_lesson_number->raw());
+
+		$changed = true;
+
+	} else if(!empty($associated_chapter->field_next_chapter->raw())) {
+
+		$next_chapter = entity_metadata_wrapper('node', $associated_chapter->field_next_chapter->value());
+		$next_lessons = $next_chapter->field_course_lessons->raw();
+
+		while(empty($next_lessons)) { // The rare case where a chapter has no lessons, go to next chapter
+			if(empty($next_chapter->field_next_chapter->value())) break;
+			$next_chapter = entity_metadata_wrapper('node', $next_chapter->field_next_chapter->value());
+			$next_lessons = $next_chapter->field_course_lessons->raw();
+		}
+
+		if(!empty($next_lessons)) {
+			$next_lesson = entity_metadata_wrapper('node', node_load($next_lessons[0]));
+
+			$course_progress->field_current_chapter->set($next_chapter->getIdentifier());
+			$course_progress->field_current_chapter_number->set($next_chapter->field_chapter_number->raw());
+
+			$course_progress->field_current_lesson->set($next_lesson->getIdentifier());
+			$course_progress->field_current_lesson_number->set($next_lesson->field_lesson_number->raw());
+
+			$changed = true;
+		}
+	}
+
+	if($changed) {
+		// This check is required because current lesson pointer will not change if the new lessons are not yet available
+		$course_progress->field_current_lesson_percent_com->set(0);
+	}
+}
+
+// function check_material_accessible($course_progress, $associated_course, $associated_chapter, $associated_lesson, $current_chapter, $current_lesson) {
+
+// 	if($current_chapter->getIdentifier() == $associated_chapter->getIdentifier() && $current_lesson->getIdentifier() == $associated_lesson->getIdentifier()) {
+// 		return false;
+// 	}
+
+// 	$cur_time = time();
+
+// 	if($associated_chapter->getIdentifier() == $current_chapter->field_next_chapter->raw() && $next_chapter_avail && $cur_time > $next_chapter_avail) {
+
+// 		$next_chapter = $associated_chapter->field_next_chapter->value();
+// 		$lessons = $next_chapter->field_course_lessons->raw();
+
+// 		if($associated_lesson->getIdentifier() != $lessons[0]) {
+
+// 			watchdog('dss', 'Next chapter is available but not first lesson of next chapter');
+// 			drupal_access_denied();
+// 			module_invoke_all('exit');
+// 			exit();
+// 		}
+
+// 		watchdog('dss', 'Allowing next chapter and first lesson');
+// 		return true;
+// 	}
+
+// 	$next_chapter_avail = $course_progress->field_date_next_chapter_avail->raw();
+// 	$next_lesson_avail = $course_progress->field_date_next_lesson_avail->raw();
+
+// 	if($associated_lesson->getIdentifier() == $current_lesson->field_next_lesson->raw() && $next_lesson_avail && $cur_time > $next_lesson_avail) {
+
+// 		watchdog('dss', 'Allowing same chapter and next lesson');
+// 		return true;
+
+// 	}
+
+// 	$associated_chapter_num = $associated_chapter->field_chapter_number->value();
+// 	$current_chapter_num = $current_chapter->field_chapter_number->value();
+// 	$num_prev_chapters_accessible = $associated_course->field_prev_chapters_accessible->value();
+
+// 	if($num_prev_chapters_accessible && $associated_chapter_num >= $current_chapter_num - $num_prev_chapters_accessible && $associated_chapter_num < $current_chapter_num) {
+
+// 		// Allow access
+// 		watchdog('dss', 'Previous ' . $num_prev_chapters_accessible . ' chapters are accessible. Allowing access');
+// 		return false;
+// 	}
+
+// 	$associated_lesson_num = $associated_lesson->field_lesson_number->value();
+// 	$current_lesson_num = $current_lesson->field_lesson_number->value();
+// 	$num_prev_lessons_accessible = $associated_course->field_prev_lessons_accessible->value();
+
+// 	// Also check that chapter is same
+// 	if($num_prev_lessons_accessible && $associated_chapter_num >= $current_chapter_num && $associated_lesson_num >= $current_lesson_num - $num_prev_lessons_accessible && $associated_lesson_num < $current_lesson_num) {
+
+// 		// Allow access
+// 		watchdog('dss', 'Previous ' . $num_prev_lessons_accessible . ' lessons are accessible. Also, chapter is same. Allowing access');
+// 		return false;
+// 	}
+
+// 	drupal_access_denied();
+// 	module_invoke_all('exit');
+// 	exit();
+// }
+
+function dss_entity_presave_course(&$course) {
+
+	if(!isset($_GET['destination'])) {
+		$_GET['destination'] = url("node/" . $course->getIdentifier()) . "/content";
+	}
+
+	// Set number of chapters
+	$course->field_number_of_chapters->set(count($course->field_course_chapters->raw()));
+
+	// Calculate number of lessons
+	$query = new EntityFieldQuery();
+
+	$query
+	->entityCondition('entity_type', 'node')
+	->propertyCondition('type', 'course_lesson')
+	->propertyCondition('status', 1, '=')
+	->fieldCondition('og_group_ref', 'target_id', $course->getIdentifier(), '=')
+	->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT');
+
+	$result = $query->execute();
+	$course->field_number_of_lessons->set(count($result['node']));
+
+	// Set previous and next chapters
+	$course_chapters = $course->field_course_chapters->value();
+
+	if(!empty($course_chapters)) {
+		foreach ($course_chapters as $i => $course_chapter_entity) {
+
+			$prev = 0; $next = 0;
+
+			if(array_key_exists($i - 1, $course_chapters)) {
+				$prev = $course_chapters[$i - 1]->nid;
+			}
+
+			if(array_key_exists($i + 1, $course_chapters)) {
+				$next = $course_chapters[$i + 1]->nid;
+			}
+
+			$course_chapter = entity_metadata_wrapper('node', $course_chapter_entity);
+
+			$course_chapter->field_prev_chapter->set($prev);
+			$course_chapter->field_next_chapter->set($next);
+			$course_chapter->field_chapter_number->set($i + 1);
+			dd('Saving course_chapter ' . $course_chapter->title->raw());
+			$course_chapter->save();
+		}
+	}
+}
+
+
+function dss_entity_insert_chapter(&$chapter) {
+
+	$course = entity_metadata_wrapper('node', $chapter->field_associated_course->value());
+	$chapters = $course->field_course_chapters->raw();
+
+	if(count($chapters) > 1) {
+		// Take second last because this chapter will already be added
+		$last_chapter = entity_metadata_wrapper('node', node_load($chapters[count($chapters) - 2]));
+		// Identifier will be available because this is insert hook
+		$last_chapter->field_next_chapter->set($chapter->getIdentifier());
+		$last_chapter->save();
+
+		$chapter->field_prev_chapter->set($last_chapter->getIdentifier());
+	}
+
+	$chapter->field_chapter_number->set(count($chapters) + 1);
+}
+
+function dss_entity_presave_chapter(&$chapter) {
+
+	// Forum is not set for this chapter
+	if(!$chapter->field_associated_forum->raw() || $chapter->field_associated_forum->raw() && $chapter->field_associated_forum->value() == null) {
+
+		dd('Creating forum for course_chapter ' . $chapter->title->raw());
+
+		$course = entity_metadata_wrapper('node', $chapter->field_associated_course->value());
+		$term_name = $chapter->title->raw();
+		$chapter_num = $chapter->field_chapter_number->value();
+		$description = 'Forum for ' . $term_name;
+
+		$forum_term = array(
+			'name' => $term_name,
+			'description' => $description,
+			'parent' => array($course->field_chapter_forums->raw()),
+			'vid' => 4, // Hard coded vocabulary id for forums
+			'weight' => $chapter_num,
+			'vocabulary_machine_name' => 'forums',
+		);
+
+		$forum_term['field_chapter_number']['und'][] = array('value' => $chapter_num);
+		$forum_term['field_associated_course']['und'][] = array('target_id' => $chapter->field_associated_course->raw());
+		$forum_term['og_group_ref']['und'][] = array('target_id' => $course->getIdentifier());
+
+		$forum_term = (object) $forum_term;
+		taxonomy_term_save($forum_term);
+
+		$chapter->field_associated_forum->set($forum_term->tid);
+
+	} else {
+
+		$term_name = $chapter->title->raw();
+		$chapter_num = $chapter->field_chapter_number->value();
+		$description = 'Forum for ' . $term_name;
+
+		$forum = entity_metadata_wrapper('taxonomy_term', $chapter->field_associated_forum->value());
+		$forum->name->set($term_name);
+		$forum->field_chapter_number->set($chapter_num);
+		$forum->weight->set($chapter_num);
+		$forum->field_associated_course->set($chapter->field_associated_course->raw());
+		$forum->save();
+	}
+
+	if(!isset($_GET['destination'])) {
+		$_GET['destination'] = url("node/" . $chapter->field_associated_course->raw()) . "/content";
+	}
+
+	// Newly added Chapter
+	if($chapter->getIdentifier() == null) {
+		return;
+	}
+
+	// Existing chapter updated
+	if($chapter->field_associated_course->value() != null && $chapter->field_chapter_number->value() == null) {
+
+		$course = entity_metadata_wrapper('node', $chapter->field_associated_course->value());
+		$chapters = $course->field_course_chapters->raw();
+
+		if(count($chapters)) {
+			$last_chapter = entity_metadata_wrapper('node', node_load($chapters[count($chapters) - 1]));
+			$last_chapter->field_next_chapter->set($chapter->getIdentifier());
+			$last_chapter->save();
+
+			$chapter->field_prev_chapter->set($last_chapter->getIdentifier());
+		}
+
+		// Set course number as the last course//
+		$chapter->field_chapter_number->set(count($chapters) + 1);
+	}
+
+	$course_lessons = $chapter->field_course_lessons->value();
+
+	if(!empty($course_lessons)) {
+		$total_video_minutes = 0;
+		foreach ($course_lessons as $i => $course_lesson_entity) {
+
+			$prev = 0; $next = 0;
+
+			if(array_key_exists($i - 1, $course_lessons)) {
+				$prev = $course_lessons[$i - 1]->nid;
+			}
+
+			if(array_key_exists($i + 1, $course_lessons)) {
+				$next = $course_lessons[$i + 1]->nid;
+			}
+
+			$course_lesson = entity_metadata_wrapper('node', $course_lesson_entity);
+
+			$course_lesson->field_prev_lesson->set($prev);
+			$course_lesson->field_next_lesson->set($next);
+			$course_lesson->field_lesson_number->set($i + 1);
+			$total_video_minutes += $course_lesson->field_video_minutes->value();
+
+			if($chapter->getIdentifier() != null) {
+				$course_lesson->field_associated_chapter->set($chapter->getIdentifier());
+			}
+
+			$course_lesson->save();
+		}
+		dd('Setting chapter video mins ' . $total_video_minutes . ' ' . $chapter->title->raw());
+		$chapter->field_video_minutes->set($total_video_minutes);
+	}
+}
+
+function dss_entity_insert_lesson(&$lesson) {
+
+	$chapter = entity_metadata_wrapper('node', $lesson->field_associated_chapter->value());
+	$lessons = $chapter->field_course_lessons->raw();
+
+	if(count($lessons) > 1) {
+		// Take second last, because this lesson will already be added
+		$last_lesson = entity_metadata_wrapper('node', node_load($lessons[count($lessons) - 2]));
+		// Identifier will be available because this is insert hook
+		$last_lesson->field_next_lesson->set($lesson->getIdentifier());
+		$last_lesson->save();
+
+		$lesson->field_prev_lesson->set($last_lesson->getIdentifier());
+	}
+
+	$lesson->field_lesson_number->set(count($lessons) + 1);
+}
+
+function dss_entity_presave_lesson(&$lesson) {
+
+    // Newly added lesson if comes here by chance
+    if($lesson->getIdentifier() == null) {
+        return;
+    }
+	// Set lesson number as last lesson if not set (this should not happen however)
+	if($lesson->field_associated_chapter->value() != null && $lesson->field_lesson_number->value() == null) {
+		$chapter = entity_metadata_wrapper('node', $lesson->field_associated_chapter->value());
+		$lessons = $chapter->field_course_lessons->raw();
+		$lesson->field_lesson_number->set(count($lessons) + 1);
+	}
+
+	// Set previous and next course materials
+	$course_materials = $lesson->field_course_materials->value();
+
+	if(!empty($course_materials)) {
+		$total_video_minutes = 0;
+		foreach ($course_materials as $i => $course_material_entity) {
+
+			$prev = 0; $next = 0;
+
+			if(array_key_exists($i - 1, $course_materials)) {
+				$prev = $course_materials[$i - 1]->nid;
+			}
+
+			if(array_key_exists($i + 1, $course_materials)) {
+				$next = $course_materials[$i + 1]->nid;
+			}
+
+			$course_material = entity_metadata_wrapper('node', $course_material_entity);
+
+			$course_material->field_prev_course_material->set($prev);
+			$course_material->field_next_course_material->set($next);
+			$course_material->field_slide_number->set($i + 1);
+			$total_video_minutes += $course_material->field_video_minutes->value();
+
+			if($lesson->getIdentifier() != null) {
+				$course_material->field_associated_lesson->set($lesson->getIdentifier());
+			}
+
+			$course_material->save();
+		}
+		dd('Setting lesson video mins ' . $total_video_minutes . ' ' . $lesson->title->raw());
+		$lesson->field_video_minutes->set($total_video_minutes);
+	}
+}
+
+/*
+ * Before saving an entity
+ */
+function dss_entity_presave($entity, $type) {
+
+	if($type != 'node') return;
+
+	switch ($entity->type) {
+
+		case 'course':
+		$course = entity_metadata_wrapper('node', $entity);
+		dss_entity_presave_course($course);
+		break;
+
+		case 'course_chapter':
+		// Set previous and next course materials
+		$chapter = entity_metadata_wrapper('node', $entity);
+		dss_entity_presave_chapter($chapter);
+		break;
+
+		case 'course_lesson':
+		$lesson = entity_metadata_wrapper('node', $entity);
+		dss_entity_presave_lesson($lesson);
+		break;
+
+		default:
+			# code...
+		break;
+	}
+}
+
+function dss_entity_insert($entity, $type) {
+
+	if($type != 'node') return;
+
+	switch ($entity->type) {
+
+		// case 'course':
+		// $course = entity_metadata_wrapper('node', $entity);
+		// dss_entity_insert_course($course);
+		// break;
+
+		// case 'course_chapter':
+		// dss_entity_presave will handle new chapters as well
+		// // Set previous and next course materials
+		// $chapter = entity_metadata_wrapper('node', $entity);
+		// dss_entity_insert_chapter($chapter);
+		// break;
+
+		case 'course_lesson':
+		$lesson = entity_metadata_wrapper('node', $entity);
+		dss_entity_insert_lesson($lesson);
+		break;
+
+		default:
+			# code...
+		break;
+	}
+}
+
+function dss_entity_delete($entity, $type) {
+
+	if($type != 'node') return;
+
+	switch ($entity->type) {
+
+		case 'course_chapter':
+		case 'course_lesson':
+
+		break;
+	}
+}
+
+// For ajax call
+function dss_course_chapters_api($chapter_id) {
+
+	global $user;
+
+	$chapter_node = node_load($chapter_id);
+
+	if(!$chapter_node || $chapter_node->type != 'course_chapter') {
+		$data = array(
+			'status' => 'error',
+			'data' => 'Invalid input',
+			);
+		drupal_json_output($data);
+		return;
+	}
+
+	$associated_chapter = entity_metadata_wrapper('node', $chapter_node);
+	$associated_course = entity_metadata_wrapper('node', $associated_chapter->field_associated_course->value());
+
+	$course_progress = dss_get_course_progress_entity($user->uid, $associated_course->getIdentifier(), true);
+	$progress = json_decode($course_progress->body->value->value(array('decode' => TRUE)), true);
+
+	$course_lessons = $associated_chapter->field_course_lessons->value();
+	$lesson_label = $associated_course->field_lesson_label->raw();
+
+	$dss_access_check_disabled = $is_content_editor && variable_get('dss_disable_access_check_admin', false);
+
+	$content = '';
+	$content .= '<div class="chapter-lessons ui relaxed divided list course-lessons-list">';
+
+	foreach ($course_lessons as $key => $course_lesson_node) {
+
+		if(empty($course_lesson_node)) continue;
+
+		$li_class = 'course-lesson-item ';
+
+		$course_lesson = entity_metadata_wrapper('node', $course_lesson_node);
+		$course_lesson_completed = dss_get_percent_completed_course_lesson($progress, $course_lesson);
+
+		if(!$dss_access_check_disabled && ($associated_chapter->field_chapter_number->raw() > $course_progress->field_current_chapter_number->raw() || $associated_chapter->field_chapter_number->raw() == $course_progress->field_current_chapter_number->raw() && $course_lesson->field_lesson_number->raw() > $course_progress->field_current_lesson_number->raw())) {
+			$url = '';
+			$li_class .= 'not-available';
+		} else {
+			$url = url('node/' . $course_lesson->getIdentifier());
+		}
+		// dpm($course_lesson->value());
+
+		$resume_btn = '';
+		if($course_lesson->getIdentifier() == $course_progress->field_current_lesson->raw()) {
+
+			$btn_label = '';
+			if($course_lesson_completed == 0) {
+				$btn_label = 'Start';
+			} else if($course_lesson_completed == 100) {
+				$btn_label = 'Review';
+			} else {
+				$btn_label = 'Resume';
+			}
+			$resume_btn = ' <span class="ui primary button continue-btn">' . $btn_label . '</span>';
+			$resume_link_done = true;
+		}
+
+		// Visible only for content editors
+		$is_content_editor_html = '';
+
+		if($is_content_editor) {
+
+			$is_content_editor_html = ' &nbsp; <span href="/node/'
+				. $course_lesson->getIdentifier() . '/edit" class="edit-link"></span>';
+
+			$review_status = entity_metadata_wrapper('taxonomy_term', $course_lesson->field_review_status->value());
+
+			if($review_status != null && isset($review_status->field_label_class)) {
+
+				$is_content_editor_html .= '<span class="ui tag label ' . $review_status->field_label_class->raw()
+					. '">' . $review_status->name->value()
+					. '</span>';
+			}
+		}
+
+		$title_content = '<div class="chapter-lesson-title"><i class="chapter-lesson-icon list icon"></i>'
+		. '<span class="title">' . $lesson_label . ' ' . $course_lesson->field_lesson_number->raw() . ': ' . $course_lesson->title->raw()
+		. $is_content_editor_html
+		. '</span>'
+		. ($course_lesson_completed >= 100 ? ' <i class="item-progress checkmark icon"></i>' : '')
+		. $resume_btn
+		. '</div>';
+
+		$content .= '<div class=""><a href="' . $url . '" class="item ' . $li_class . '" data-lesson-nid="' . $course_lesson->getIdentifier() . '">'
+		. $title_content
+		. '</a></div>';
+	}
+
+	$content .= '</div>';
+
+	// return $content;
+
+	$data = array(
+		'status' => 'ok',
+		'data' => $content,
+		);
+
+	drupal_json_output($data);
+}
+
+function dss_exercise_data($exercise_nid) {
+
+    $content = array();
+    $exercise = entity_metadata_wrapper('node', node_load($exercise_nid));
+
+    $questions = $exercise->field_quiz_questions->value();
+
+    foreach ($questions as $question_node) {
+        $question = entity_metadata_wrapper('node', $question_node);
+
+        $explanations = array();
+
+        foreach ($question->field_answer_explanations->value() as $explanation) {
+            $explanations[] = $explanation['value'];
+        }
+
+        $content[$question->getIdentifier()] = array(
+            'ans' => $question->field_correct_answers->raw(),
+            'hints' => $question->field_answer_hints->value(),
+            'explanations' => $explanations,
+        );
+    }
+
+    $data = array(
+		'status' => 'ok',
+		'data' => $content,
+		);
+
+	drupal_json_output($data);
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function dss_ctools_plugin_directory($owner, $plugin_type) {
+	if ($owner == 'ctools' && $plugin_type == 'content_types') {
+		return 'plugins/' . $plugin_type;
+	}
+}
+
+/**
+ * Implements hook_wysiwyg_editor_settings_alter()
+ */
+function dss_wysiwyg_editor_settings_alter(&$settings, $context) {
+
+	if ($context['profile']->editor == 'ckeditor') {
+		$settings['customConfig'] = base_path() . drupal_get_path('theme', 'vedic') . '/js/lib/ckeditor.config.js';
+	}
+}
+
+function dss_action_activate_licenses_recurring_order($order) {
+	$licenses = commerce_license_billing_get_recurring_order_licenses($order);
+	foreach ($licenses as $license) {
+		$license->activate();
+	}
+}
+
+function dss_action_revoke_licenses_recurring_order($order) {
+	$licenses = commerce_license_billing_get_recurring_order_licenses($order);
+	foreach ($licenses as $license) {
+		$license->revoke();
+	}
+}

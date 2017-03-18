@@ -1,0 +1,64 @@
+// Import external libraries.
+@import "compass";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+@import "../../variables/**/*";
+@import "../../mixins/**/*";
+
+.l-content-inner {
+  @include segment-padding();
+}
+
+.form-wrapper,
+.form-item {
+  margin-bottom: 1em;
+
+  label {
+    display: block;
+
+    @include breakpoint($tab) {
+      display: inline-block;
+      width: 30%;
+    }
+  }
+
+  .description {
+    font-size: .9em;
+    line-height: 1.4em;
+    color: $font-color-light-2;
+    margin-bottom: 1em;   
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"] {
+    max-width: 18em;
+    border: 1px solid $border-grey;
+    @include border-radius(4px);
+    padding: .4em;
+  }
+
+  .form-submit {
+    @include btn-1();
+    font-size: 1.2em;
+    padding: 0 2em;
+    border: none;
+    line-height: 2;
+  }
+ 
+}

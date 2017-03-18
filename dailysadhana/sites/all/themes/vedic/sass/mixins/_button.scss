@@ -1,0 +1,35 @@
+@import "../variables/**/*";
+
+@mixin btn-1 {
+	&,
+	&:active {
+		font-weight: bold;
+		color: rgba($white, .9);
+		background-color: $theme-color-1-light-1;
+		@include border-radius(2px);
+		transition: color .4s ease-in, background-color .4s ease-in;
+	}
+
+	&.active,
+	&:hover {
+		color: $white;
+		background-color: darken($theme-color-1-light-1, 8%);
+	}
+}
+
+@mixin btn-2 {
+	&,
+	&:active {
+		font-weight: bold;
+		color: rgba($white, .9);
+		background-color: $theme-color-2;
+		@include border-radius(2px);
+		transition: color .4s ease-in, background-color .4s ease-in;
+	}
+
+	&.active,
+	&:hover {
+		color: $white;
+		background-color: $theme-color-2-dark-3;
+	}
+}

@@ -1,0 +1,7 @@
+
+name = Custom DSS
+description = Custom DSS Module.
+package = Custom
+core = 7.x
+files[] = dss.helper.inc
+dependencies[] = ctools

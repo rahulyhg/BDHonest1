@@ -1,0 +1,41 @@
+name = Vedic
+description = Please provide a description for your theme.
+base theme = omega
+screenshot = screenshot.png
+engine = phptemplate
+core = 7.x
+
+; ========================================
+; Stylesheets
+; ========================================
+stylesheets[all][] = css/vedic.hacks.css
+stylesheets[all][] = css/vedic.styles.css
+stylesheets[all][] = css/vedic.no-query.css
+
+; ========================================
+; Scripts
+; ========================================
+scripts[] = semantic/dist/semantic.js
+scripts[] = js/vedic.behaviors.js
+scripts[] = js/vedic.main.js
+
+
+
+; ========================================
+; Regions
+; ========================================
+regions[branding] = Branding
+regions[header] = Header
+regions[navigation] = Navigation
+regions[highlighted] = Highlighted
+regions[help] = Help
+regions[content] = Content
+regions[sidebar_first] = First Sidebar
+regions[sidebar_second] = Second Sidebar
+regions[footer] = Footer
+
+
+; ========================================
+; Layout Settings
+; ========================================
+; layout[vedic][stylesheets][all][] = css/layouts/vedic/ohm-vedic.layout.css

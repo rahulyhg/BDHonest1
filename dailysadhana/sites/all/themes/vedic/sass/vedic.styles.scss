@@ -1,0 +1,819 @@
+// Import external libraries.
+@import "compass";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+
+@import "variables/**/*";
+@import "mixins/**/*";
+@import "base/**/*";
+@import "components/header";
+@import "components/sidebar";
+@import "components/sprites";
+@import "components/button";
+@import "components/ckeditor";
+
+html {
+	height: 100%;
+}
+
+body {
+	color: $font-color;
+	background-color: $body-bg-color;
+	font-size: 13px;
+	line-height: 1.8em;
+	overflow: visible;
+	opacity: 1;
+	@include transition(background 2s linear);
+
+	@include breakpoint($tab) {
+		// background: linear-gradient(160deg, $theme-color-1 0%, $theme-color-1-light-4 20%, $theme-color-2-light-4 70%, $light-grey 100%) !important;
+		background-image: url($img-s3-path + 'blue-bg.jpg');
+		// background-size: cover;
+		// background-attachment: fixed;
+		font-size: 15px;
+		height: 100% !important;
+
+		// &.admin-menu {
+		// 	height: calc(100% - $admin-menu-margin);
+		// }
+	}
+}
+
+.container {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: -100;
+	// @include transition(background-color 1s ease-in);
+
+	// @include breakpoint($tab) {
+	// 	@include background-image(linear-gradient(rgba($black, .6) 0%, rgba($theme-color-2-dark-2, .1) 45%, rgba($theme-color-2-dark-2, .15) 55%, rgba($black, .3) 100%));
+	// }
+
+	// &.eclipse {
+	// 	background: lighten($black, 10%) !important;
+	// }
+}
+
+.pane-background-slider,
+.view-background-slider {
+	display: none;
+	visibility: hidden;
+}
+
+.bg-slider {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	z-index: -1000;
+
+	.bg-slide {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-size: cover;
+		z-index: -1000;
+	}
+}
+
+a {
+	@include transition(color .2s ease-in);
+}
+
+h1,
+h2,
+h3,
+h4,
+.ui.header {
+	color: $theme-color-1;
+	font-weight: bold;
+}
+
+.ui.divider {
+	border-color: transparent !important;
+	background-color: rgba($theme-color-2, .5);
+}
+
+dt {
+	margin: 0 0 .5em;
+	font-weight: bold;
+}
+
+dd {
+	margin: 0 0 1em;
+}
+
+p {
+	line-height: 1.8em;
+}
+
+.clearfix {
+	@include clearfix();
+}
+
+.element-invisible {
+	display: none;
+}
+
+.blur-blue {
+	background-size: cover;
+	background-image: url($img-path + 'blur-blue.jpg');
+}
+
+.blur-orange {
+	background-size: cover;
+	background-image: url($img-path + 'blur-orange.jpg');
+}
+
+.blur-brown {
+	background-size: cover;
+	background-image: url($img-path + 'blur-brown.jpg');
+}
+
+i.icon.maharajji::before {
+	content: '';
+}
+
+i.icon.swamiji::before {
+	content: '';
+}
+
+i.icon.diya::before {
+	content: '';
+}
+
+i.icon.prayer::before {
+	content: '';
+}
+
+i.icon.tabla::before {
+	content: '';
+}
+
+i.icon.harmonium::before {
+	content: '';
+}
+
+i.icon.kartaal::before {
+	content: '';
+}
+
+.ui.message.messages {
+	margin-bottom: 2em;
+
+	> ul {
+		list-style-type: none;
+		padding: 0;
+		margin: 0;
+	}
+}
+
+.tabs.ui.tabular.menu {
+	margin-bottom: 2em;
+}
+
+.ui.primary.button {
+	border-radius: 4px;
+}
+
+.out-of-view {
+	visibility: hidden !important;
+	position: absolute !important;
+	top: 9999px !important;
+}
+
+.hidden {
+	display: none;
+}
+
+.link {
+	color: $link-blue;
+	cursor: pointer;
+}
+
+.edit-link {
+	cursor: pointer;
+	font-family: Icons;
+	display: inline-block;
+	min-width: 1em;
+	color: $text-light-grey;
+	@include transition(transform .2s ease);
+
+	&::after {
+		content: '\f044'; // Edit icon of Semantic UI
+	}
+
+	&:hover {
+		color: $dark-grey;
+		transform: scale(1.2);
+	}
+}
+
+@include breakpoint($tab) {
+	.paper-cutting {
+		position: relative;
+		overflow: hidden;
+
+		&::before {
+			content: '';
+			z-index: 10;
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 10px;
+			background: url($img-path + 'main-edges/paper-top.png') repeat-x 450px 100%;
+		}
+
+		&.white::before {
+			background: url($img-path + 'white-edges/paper-top.png') repeat-x 450px 100%;
+		}
+
+		&::after {
+			content: '';
+			z-index: 10;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 10px;
+			background: url($img-path + 'main-edges/paper-bottom.png') repeat-x 450px 100%;
+		}
+
+		&.white::after {
+			background: url($img-path + 'white-edges/paper-bottom.png') repeat-x 450px 100%;
+		}
+	}
+
+	.paper-cutting-inner {
+		overflow: hidden;
+
+		&::before {
+			content: '';
+			z-index: 10;
+			position: absolute;
+			top: 0;
+			left: 0;
+			height: 100%;
+			width: 10px;
+			background: url($img-path + 'main-edges/paper-left.png') repeat-y 100% 450px;
+		}
+
+		&.white::before {
+			background: url($img-path + 'white-edges/paper-left.png') repeat-y 100% 450px;
+		}
+
+		&::after {
+			content: '';
+			z-index: 10;
+			position: absolute;
+			top: 0;
+			right: 0;
+			height: 100%;
+			width: 10px;
+			background: url($img-path + 'main-edges/paper-right.png') repeat-y 100% 450px;
+		}
+
+		&.white::after {
+			background: url($img-path + 'white-edges/paper-right.png') repeat-y 100% 450px;
+		}
+	}
+}
+
+.l-main {
+	padding-bottom: 5em;
+}
+
+.l-content {
+	@include page-width();
+	background-color: $white-hue;
+	// position: relative;
+
+	@include breakpoint($tab) {
+		@include border-radius(4px);
+		@include background-clip(padding-box);
+		overflow: auto;
+	}
+
+	.ui.padded.segment {
+		background-color: $white-hue;
+		@include segment-padding();
+		margin: 0 auto;
+		border: 0;
+		@include box-shadow(none);
+
+		// &.gray-segment {
+		// 	;
+		// }
+		
+		&.yellow {
+			background-color: $pale-yellow;
+			border-top: 1px solid $pale-yellow-dark-4;
+			border-bottom: 1px solid $pale-yellow-dark-4;
+		}
+	}
+}
+
+blockquote,
+.gray-bg,
+.ui.segment.gray-bg {
+	background-color: $light-grey;
+	background-image: url($img-path + 'gray-bg.jpg');
+}
+
+.feather-note,
+.note-bg {
+	color: $white;
+	background-color: $theme-color-2;
+	background-image: url($img-s3-path + 'note-bg.jpg');
+	background-size: 100% 100%;
+}
+
+.bg-dimmer {
+	@include background-image(linear-gradient(rgba($black, .1) 0%, rgba($black, 0) 45%, rgba($black, 0) 55%, rgba($black, .1) 100%));
+}
+
+.note-bg {
+	.ui.padded.segment {
+		background-color: transparent;
+	}
+
+	.ui.header {
+		color: $white;
+		text-align: center;
+	}
+}
+
+.leaves-box {
+	.sprite {
+		position: relative;
+		left: calc(50% - 30px);
+	}
+}
+
+.l-content-inner {
+	overflow-x: hidden;
+}
+
+.breadcrumb {
+	font-size: .45em;
+	font-weight: bold;
+	line-height: 1;
+	color: rgba($heading-color, .9);
+	margin-bottom: 1em;
+	text-transform: uppercase;
+
+	a {
+		color: rgba($heading-color, .9);
+
+		&:hover {
+			color: $heading-color;
+		}
+	}
+
+	.sep {
+		display: inline-block;
+		margin: 0 .4em;
+	}
+}
+
+.l-content-header {
+	// text-align: center;
+	position: relative;
+
+	.ui.header {
+		font-weight: bold;
+		color: $heading-color;
+		background-color: $light-grey;
+		background-image: url($img-path + 'gray-bg.jpg');
+		background-position: left top;
+		border-bottom: 1px solid $border-grey;
+		padding-bottom: 1.5em;
+		margin-bottom: 0;
+		@include segment-padding();
+		
+		@include breakpoint($tab) {
+			background-image: url('https://d4mg7m5aeu7n2.cloudfront.net/userfiles/files/page-images/header-bg.jpg');
+			background-position: right top;
+			background-size: auto 100%;
+			background-repeat: no-repeat;
+			min-height: 220px;
+			padding-top: 40px !important;
+		}
+
+		// &.has-breadcrumb {
+		// 	padding: ($padding-size - .9) 0;
+		// }
+
+		.header-content {
+			line-height: 1;
+			font-size: 1.2em;
+
+			@include breakpoint($tab) {
+				font-size: 1.4em;
+				padding: .5em 0 0 1em;
+				width: 70%;
+			}
+
+			@include breakpoint($desk) {
+				font-size: 1.6em;
+				
+				.course-title {
+					font-size: 1.1em;
+				}
+			}
+		}
+
+		.subtitle {
+			font-size: .6em;
+			margin-top: .7em;
+			// font-weight: normal;
+		}
+	}
+
+	.ui.progress {
+		position: absolute;
+		bottom: 0;
+		width: 100%;
+
+		.bar {
+			background-color: $theme-color-2 !important;
+		}
+	}
+
+	.ui.progress.attached,
+	.ui.progress.attached .bar {
+		height: 3px;
+	}
+}
+
+.bg-image-header {
+	position: relative;
+	color: $font-color-light-1;
+	background-image: url($img-path + 'ocean-bg.jpg');
+	background-size: cover;
+	// .bg-image-header-dimmer {
+	// 	position: absolute;
+	// 	width: 100%;
+	// 	height: 100%;
+	// }
+
+	.ui.padded.segment {
+		background-color: transparent;
+		@include filter-gradient($white, $light-grey, horizontal);
+		@include background-image(radial-gradient(ellipse at center 25%, rgba($white, 1) 0%, rgba($light-grey, .6) 46%, rgba($light-grey, .6) 47%, rgba($light-grey, .1) 100%));
+	}
+
+	.description {
+		width: 80%;
+		margin: 0 auto;
+		text-align: center;
+		line-height: 1.6em;
+	}
+}
+
+.feather-note {
+	font-size: 1.05rem;
+	margin-bottom: 2em;
+	@include border-radius(4px);
+	color: rgba($white, .95);
+	padding: 2em 4em;
+	position: relative;
+
+	@include breakpoint($tab) {
+		padding: 2em 6em;
+	}
+
+	&::before {
+		position: absolute;
+		left: 2em;
+		top: calc(50% - 29px);
+		@include sprite-common();
+		@include sprite-leaves-up();
+	}
+
+	&::after {
+		position: absolute;
+		right: 2em;
+		top: calc(50% - 29px);
+		@include sprite-common();
+		@include sprite-leaves-down();
+	}
+
+	p {
+		line-height: 1.6em;
+	}
+
+	.sprite.feather-pen {
+		margin-bottom: 1em;
+		opacity: .6;
+
+		&::before {
+			margin: 0 auto;
+		}
+	}
+}
+
+.slide-heading,
+.ui.header.welcome-decorative {
+	text-align: center;
+	position: relative;
+	margin-bottom: 2.5em;
+	padding: 0 0 .25em;
+
+	&::after {
+		@include sprite-common();
+		@include sprite-welcome-decorative();
+		position: absolute;
+		bottom: -1em;
+		left: calc(50% - 30px);
+	}
+}
+
+.ui.header.title-decorative {
+	position: relative;
+	margin-bottom: 2.5em;
+
+	&::after {
+		@include sprite-common();
+		@include sprite-title-decorative();
+		position: absolute;
+		bottom: -1.5em;
+		left: 0;
+	}
+
+	&.center {
+		text-align: center;
+
+		&::after {
+			left: calc(50% - 18px);
+		}
+	}
+}
+
+.flute-decorative {
+	position: relative;
+	margin-bottom: 2em;
+
+	&::after {
+		@include sprite-common();
+		@include sprite-flute();
+		opacity: .8;
+		position: absolute;
+		bottom: -1.5em;
+		left: 0;
+	}
+}
+
+.ui.header.flute-decorative {
+	margin-bottom: 3em;
+
+	&.center {
+		text-align: center;
+
+		&::after {
+			left: calc(50% - 60px);
+		}
+	}
+}
+
+.grid {
+	.row {
+		@include clearfix;
+	}
+
+	@include layout($gutter: 1) {
+		.two.column.row .column {
+			margin-bottom: 2em;
+
+			@include breakpoint($tab) {
+				@include float-span(6);
+				margin-bottom: 0;
+
+				&:nth-child(2n+2) {
+					@include float-span(6, last);
+				}
+			}
+		}
+	}
+
+	@include layout($gutter: 1 / 3) {
+		.three.column.row .column {
+			margin-bottom: 2em;
+
+			@include breakpoint($tab) {
+				@include float-span(4);
+
+				&:nth-child(3n+3) {
+					@include float-span(4, last);
+				}
+			}
+		}
+	}
+
+	&.relaxed {
+		@include layout($gutter: 1) {
+			.three.column.row .column {
+				margin-bottom: 2em;
+
+				@include breakpoint($tab) {
+					@include float-span(4);
+					margin-bottom: 3em;
+
+					&:nth-child(3n+3) {
+						@include float-span(4, last);
+					}
+				}
+			}
+		}
+	}
+}
+
+.testimonials {
+	.row .column {
+		line-height: 1.6em;
+		padding: 2em;
+		padding-left: 5em;
+		position: relative;
+		@include border-radius(4px);
+
+		&::before {
+			content: ''; // fa-quote-left
+			font-family: Icons;
+			color: rgba($theme-color-1, .3);
+			font-size: 2em;
+			position: absolute;
+			left: 1em;
+		}
+
+		b {
+			display: block;
+			float: right;
+		}
+	}
+}
+
+.features-boxes {
+	.column {
+		@include shadow-box;
+
+		&:hover {
+			.image {
+				color: $white;
+				background-color: rgba($black, .1);
+			}
+		}
+
+		.image {
+			text-align: center;
+			font-size: 100px;
+			line-height: 150px;
+			color: rgba($white, .9);
+			font-family: Icons;
+			@include transition(background-color, .4s, ease-in);
+			width: 100%;
+			height: 150px;
+			@include user-select(none);
+		}
+
+		.content {
+			text-align: center;
+			padding: 2em;
+
+			p {
+				@include breakpoint($tab) {
+					min-height: 10em;
+					line-height: 1.6em;
+				}
+			}
+		}
+	}
+}
+
+.features-mini-boxes {
+	&.three.column.row .column {
+		margin-bottom: 3em;
+	}
+
+	.ui.header {
+		margin-top: 1em;
+	}
+
+	.image {
+		text-align: left;
+		font-size: 2.5em;
+		line-height: 1;
+		color: $theme-color-2;
+		font-family: Icons;
+		@include user-select(none);
+	}
+
+	p {
+		line-height: 1.6em;
+		font-size: .95em;
+	}
+}
+
+ul.feature-points {
+	list-style-type: none;
+
+	li {
+		position: relative;
+
+		&::before {
+			color: $theme-color-1;
+			font-family: Icons;
+			content: ' '; // fa-hand-o-right
+			position: absolute;
+			left: -2em;
+		}
+	}
+}
+
+.view-home-page-slider {
+	border-radius: 4px;
+	max-height: 400px; // Set the max height to height of each slide
+	overflow: hidden;
+	z-index: 0;
+	opacity: 0;
+
+	img {
+		height: auto !important;
+	}
+
+	.bx-wrapper {
+		margin-bottom: 2em;
+
+		.bx-pager.bx-default-pager a {
+			background: $theme-color-1-light-3;
+		}
+
+		.bx-pager,
+		.bx-controls-auto {
+			bottom: -40px;
+		}
+
+		.bx-pager.bx-default-pager a:hover,
+		.bx-pager.bx-default-pager a.active {
+			background: $theme-color-1-dark-1;
+		}
+
+		.bx-prev,
+		.bx-next {
+			color: rgba($black, .4);
+			background: none;
+			visibility: hidden;
+			text-indent: 0;
+			width: 0;
+
+			&:hover {
+				color: rgba($black, .8);
+			}
+
+			&::before {
+				font-family: Icons;
+				font-size: 60px;
+				visibility: visible;
+				padding: .2em;
+			}
+		}
+
+		.bx-prev {
+			left: 10px;
+
+			&::before {
+				content: '';
+			}
+		}
+
+		.bx-next {
+			right: 50px;
+
+			&::before {
+				content: '';
+			}
+		}
+
+		.slider-overlay {
+			position: absolute;
+			bottom: 0;
+		}
+	}
+}
+
+
+

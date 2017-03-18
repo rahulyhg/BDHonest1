@@ -1,0 +1,73 @@
+/* line 89, ../sass/sprites.scss */
+.sprite::before {
+  content: ' ';
+  background-image: url("/sites/all/themes/vedic/images/spritesheet.png");
+  background-repeat: no-repeat;
+  display: block; }
+/* line 93, ../sass/sprites.scss */
+.sprite.flute::before {
+  width: 120px;
+  height: 9px;
+  background-position: -5px -5px; }
+/* line 97, ../sass/sprites.scss */
+.sprite.bonus-icon::before {
+  width: 15px;
+  height: 17px;
+  background-position: -135px -5px; }
+/* line 101, ../sass/sprites.scss */
+.sprite.feather-pen::before {
+  width: 37px;
+  height: 45px;
+  background-position: -160px -5px; }
+/* line 105, ../sass/sprites.scss */
+.sprite.header-feather::before {
+  width: 140px;
+  height: 142px;
+  background-position: -5px -32px; }
+/* line 109, ../sass/sprites.scss */
+.sprite.header-flower::before {
+  width: 34px;
+  height: 34px;
+  background-position: -155px -60px; }
+/* line 113, ../sass/sprites.scss */
+.sprite.leaves-down::before {
+  width: 21px;
+  height: 58px;
+  background-position: -155px -104px; }
+/* line 117, ../sass/sprites.scss */
+.sprite.leaves-left::before {
+  width: 58px;
+  height: 21px;
+  background-position: -5px -184px; }
+/* line 121, ../sass/sprites.scss */
+.sprite.leaves-right::before {
+  width: 58px;
+  height: 21px;
+  background-position: -73px -184px; }
+/* line 125, ../sass/sprites.scss */
+.sprite.leaves-up::before {
+  width: 21px;
+  height: 58px;
+  background-position: -186px -104px; }
+/* line 129, ../sass/sprites.scss */
+.sprite.quote-icon::before {
+  width: 43px;
+  height: 33px;
+  background-position: -155px -172px; }
+/* line 133, ../sass/sprites.scss */
+.sprite.title-decorative::before {
+  width: 35px;
+  height: 17px;
+  background-position: -207px -5px; }
+/* line 137, ../sass/sprites.scss */
+.sprite.user-icon::before {
+  width: 14px;
+  height: 16px;
+  background-position: -207px -31px; }
+/* line 141, ../sass/sprites.scss */
+.sprite.welcome-decorative::before {
+  width: 60px;
+  height: 13px;
+  background-position: -5px -215px; }
+
+/*# sourceMappingURL=sprites.css.map */

@@ -1,0 +1,451 @@
+@-moz-keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    -moz-transform: translateY(0);
+    transform: translateY(0); }
+  40% {
+    -moz-transform: translateY(-30px);
+    transform: translateY(-30px); }
+  60% {
+    -moz-transform: translateY(-15px);
+    transform: translateY(-15px); } }
+@-webkit-keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    -webkit-transform: translateY(0);
+    transform: translateY(0); }
+  40% {
+    -webkit-transform: translateY(-30px);
+    transform: translateY(-30px); }
+  60% {
+    -webkit-transform: translateY(-15px);
+    transform: translateY(-15px); } }
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    -moz-transform: translateY(0);
+    -ms-transform: translateY(0);
+    -webkit-transform: translateY(0);
+    transform: translateY(0); }
+  40% {
+    -moz-transform: translateY(-30px);
+    -ms-transform: translateY(-30px);
+    -webkit-transform: translateY(-30px);
+    transform: translateY(-30px); }
+  60% {
+    -moz-transform: translateY(-15px);
+    -ms-transform: translateY(-15px);
+    -webkit-transform: translateY(-15px);
+    transform: translateY(-15px); } }
+/* line 26, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.ui.header.h2 {
+  font-size: 1.5em; }
+
+/* line 30, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.lesson-description p {
+  color: #666;
+  line-height: 1.4em; }
+
+/* line 35, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.course-material-item {
+  margin-bottom: .5em;
+  background-color: #f6f3f3;
+  font-size: 1em;
+  line-height: 3em;
+  padding: .6em 2em;
+  margin: .5em 0;
+  outline: 0; }
+  /* line 43, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item.link {
+    color: rgba(101, 136, 203, 0.85);
+    -moz-transition: background-color 0.2s ease-in, color 0.2s ease-in;
+    -o-transition: background-color 0.2s ease-in, color 0.2s ease-in;
+    -webkit-transition: background-color 0.2s ease-in, color 0.2s ease-in;
+    transition: background-color 0.2s ease-in, color 0.2s ease-in; }
+  @media (min-width: 768px) {
+    /* line 35, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item {
+      font-size: 1.2em;
+      line-height: 40px; } }
+  /* line 55, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item .type-icon.large.icon {
+    margin-right: .5em; }
+  /* line 59, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item .video-minutes {
+    display: inline-block;
+    margin-left: 1em;
+    font-size: .7em;
+    background-color: rgba(106, 112, 118, 0.5);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0 .8em;
+    line-height: 2.2em;
+    border-radius: 4px;
+    box-sizing: border-box;
+    position: relative;
+    top: -.1em; }
+  /* line 73, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item .continue-btn {
+    display: inline-block;
+    float: right;
+    font-size: 1em; }
+  /* line 79, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item .edit-link {
+    color: inherit; }
+  /* line 83, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item i.icon {
+    color: inherit; }
+    /* line 86, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item i.icon.item-progress.checkmark {
+      display: none;
+      float: right;
+      margin: 0 0 0 1em; }
+  /* line 93, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item.completed .item-progress.checkmark.icon {
+    display: inline-block; }
+  /* line 97, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item:not(.completed):not(.material-disabled) {
+    background-color: #6588cb; }
+    /* line 100, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item:not(.completed):not(.material-disabled).link {
+      color: rgba(255, 255, 255, 0.8); }
+      /* line 103, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .course-material-item:not(.completed):not(.material-disabled).link:hover {
+        color: rgba(255, 255, 255, 0.9);
+        background-color: rgba(6, 49, 126, 0.9); }
+    /* line 109, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item:not(.completed):not(.material-disabled) .video-minutes {
+      background-color: rgba(6, 49, 126, 0.9); }
+  /* line 114, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item.material-disabled {
+    cursor: auto;
+    color: #bcbcbc; }
+    /* line 119, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item.material-disabled .icon, .course-material-item.material-disabled:hover .icon {
+      color: #bcbcbc; }
+    /* line 124, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .course-material-item.material-disabled .video-minutes {
+      background-color: rgba(106, 112, 118, 0.25); }
+  /* line 129, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .course-material-item:not(.material-disabled).completed:hover {
+    background-color: #ebe4e4; }
+
+/* line 134, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.ui.header.items-list-header.title-decorative {
+  font-size: 1.5em;
+  font-weight: 400;
+  margin-bottom: 2.5em; }
+
+/* line 141, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.ui.menu.course-material-menu {
+  background: transparent;
+  height: 55px; }
+  @media (min-width: 768px) {
+    /* line 141, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu {
+      width: auto !important;
+      float: right;
+      height: 55px;
+      margin: 0; } }
+  /* line 152, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .ui.menu.course-material-menu:first-child {
+    margin-top: 0;
+    margin-bottom: 8px; }
+  /* line 157, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .ui.menu.course-material-menu .item {
+    color: rgba(255, 255, 255, 0.9); }
+    /* line 160, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item::before {
+      content: none; }
+    /* line 164, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item .ui.circular.label {
+      font-size: 1.2em;
+      margin: 0;
+      background-color: rgba(255, 255, 255, 0.5);
+      color: #f7ac33; }
+    /* line 171, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item i.icon.item-progress.checkmark {
+      margin-left: .5em;
+      display: none; }
+    /* line 176, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item.completed i.icon.item-progress.checkmark {
+      display: inline-block; }
+    /* line 180, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item:hover {
+      background-color: #f6a41f; }
+    /* line 187, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item:hover .ui.circular.label, .ui.menu.course-material-menu .item.active .ui.circular.label, .ui.menu.course-material-menu .item.active:hover .ui.circular.label {
+      background-color: rgba(255, 255, 255, 0.8); }
+    /* line 191, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item:hover .nav-title, .ui.menu.course-material-menu .item.active .nav-title, .ui.menu.course-material-menu .item.active:hover .nav-title {
+      color: rgba(255, 255, 255, 0.8); }
+    /* line 196, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item.active, .ui.menu.course-material-menu .item.active:hover {
+      background-color: #f59c0c; }
+      /* line 200, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .ui.menu.course-material-menu .item.active .ui.circular.label, .ui.menu.course-material-menu .item.active:hover .ui.circular.label {
+        color: #f59c0c; }
+      /* line 204, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .ui.menu.course-material-menu .item.active .nav-title, .ui.menu.course-material-menu .item.active:hover .nav-title {
+        display: inline-block; }
+    /* line 209, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item.material-disabled, .ui.menu.course-material-menu .item.material-disabled:hover {
+      color: rgba(255, 255, 255, 0.3); }
+    /* line 214, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.menu.course-material-menu .item .edit-link {
+      color: rgba(255, 255, 255, 0.6); }
+      /* line 217, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .ui.menu.course-material-menu .item .edit-link:hover {
+        color: #fff; }
+  /* line 223, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .ui.menu.course-material-menu .nav-title {
+    display: none;
+    margin-left: 1em;
+    font-size: 1.1em; }
+
+/* line 231, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.ui.dimmer.modal-dimmer {
+  background-color: rgba(164, 104, 6, 0.7);
+  top: 3.42857143rem !important;
+  height: calc(100% - 3.42857143rem) !important; }
+  @media (min-width: 768px) {
+    /* line 231, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.dimmer.modal-dimmer {
+      top: 4.42857143rem !important;
+      height: calc(100% - 4.42857143rem) !important; } }
+  /* line 242, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .ui.dimmer.modal-dimmer .ui.indeterminate.text.loader {
+    color: #064771; }
+    /* line 246, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .ui.dimmer.modal-dimmer .ui.indeterminate.text.loader::before {
+      border-color: #064771; }
+
+/* line 252, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.bx-wrapper .bx-loading {
+  visibility: hidden; }
+
+/* line 256, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.modals.dimmer .ui.large.modal.course-content-modal {
+  color: #2b2b2b;
+  /* Hack start: making position relative */
+  top: 0 !important;
+  position: relative !important;
+  margin: 0 0 0 -50% !important;
+  width: 100%;
+  background: transparent; }
+  @media (min-width: 768px) {
+    /* line 256, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modals.dimmer .ui.large.modal.course-content-modal {
+      height: 100% !important;
+      overflow: hidden; } }
+  /* line 271, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal .slides {
+    min-height: 100px; }
+  /* line 275, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal > .header {
+    background-color: #f7ac33;
+    color: #fff;
+    padding: 0; }
+    @media (min-width: 768px) {
+      /* line 275, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .modals.dimmer .ui.large.modal.course-content-modal > .header {
+        height: 55px;
+        line-height: 55px; } }
+    /* line 285, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modals.dimmer .ui.large.modal.course-content-modal > .header .modal-page-width {
+      padding: 0 1rem; }
+      @media (min-width: 1200px) {
+        /* line 285, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+        .modals.dimmer .ui.large.modal.course-content-modal > .header .modal-page-width {
+          padding: 0; } }
+  /* line 294, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal > .content {
+    padding: 0 !important;
+    background: transparent; }
+    @media (min-width: 768px) {
+      /* line 294, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .modals.dimmer .ui.large.modal.course-content-modal > .content {
+        height: calc(100% - 110px);
+        overflow: scroll; } }
+    /* line 309, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modals.dimmer .ui.large.modal.course-content-modal > .content .modal-page-width,
+    .modals.dimmer .ui.large.modal.course-content-modal > .content .bx-wrapper,
+    .modals.dimmer .ui.large.modal.course-content-modal > .content .bx-viewport,
+    .modals.dimmer .ui.large.modal.course-content-modal > .content .slides.course-material-slides {
+      height: 100%;
+      background: #fff; }
+  /* line 318, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal .actions {
+    padding: 0 !important;
+    background: transparent;
+    z-index: 9999;
+    width: 100%;
+    text-align: center;
+    line-height: 54px;
+    height: 55px;
+    border-top: 0; }
+    @media (min-width: 768px) {
+      /* line 318, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+      .modals.dimmer .ui.large.modal.course-content-modal .actions {
+        position: absolute;
+        bottom: 0; } }
+    /* line 333, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modals.dimmer .ui.large.modal.course-content-modal .actions .modal-page-width {
+      background-color: #fff; }
+  /* line 338, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal > .close {
+    top: .5em;
+    right: 1em;
+    color: #fff; }
+  /* line 344, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .modals.dimmer .ui.large.modal.course-content-modal .ui.divider {
+    margin: 0 0 8px; }
+
+/* line 349, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.prev-nav,
+.next-nav {
+  text-align: center;
+  display: block;
+  padding: 0 3em;
+  cursor: pointer;
+  font-weight: 500;
+  -moz-user-select: -moz-none;
+  -ms-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -moz-transition: background-color, 0.4s, ease-in;
+  -o-transition: background-color, 0.4s, ease-in;
+  -webkit-transition: background-color, 0.4s, ease-in;
+  transition: background-color, 0.4s, ease-in; }
+
+/* line 360, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.prev-nav {
+  -sgs-span-settings: ("span": 6, "location": 1, "grid": 12, "gutter": 0, "style": "opposite", "start row": true, "end row": false, "fixed gutter": false, "split gutter": null, "gutter property": "margin", "options": (null: null));
+  width: 50%;
+  float: left;
+  margin-right: -100%;
+  margin-left: 0;
+  clear: none;
+  color: rgba(5, 40, 102, 0.9);
+  background-color: #fff;
+  text-align: left;
+  border-top: 1px solid #ddd; }
+  /* line 367, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .prev-nav.disabled {
+    color: rgba(6, 49, 126, 0.3);
+    cursor: default; }
+  /* line 372, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .prev-nav:hover {
+    background-color: #f6f3f3; }
+
+/* line 377, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.next-nav {
+  -sgs-span-settings: ("span": 6, "location": 7, "grid": 12, "gutter": 0, "style": "opposite", "start row": false, "end row": true, "fixed gutter": false, "split gutter": null, "gutter property": "margin", "options": (null: null));
+  width: 50%;
+  float: right;
+  margin-left: 0;
+  margin-right: 0;
+  clear: none;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: right; }
+  /* line 4, ../../../sass/mixins/_button.scss */
+  .next-nav, .next-nav:active {
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.9);
+    background-color: #6588cb;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+    transition: color .4s ease-in, background-color .4s ease-in; }
+  /* line 13, ../../../sass/mixins/_button.scss */
+  .next-nav.active, .next-nav:hover {
+    color: #fff;
+    background-color: #4670c1; }
+  /* line 383, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .next-nav.disabled {
+    color: rgba(255, 255, 255, 0.3);
+    cursor: default; }
+
+/* line 389, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.icon.scroll-indicator {
+  cursor: pointer;
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  text-align: center;
+  top: -50px;
+  left: calc(50% - 20px);
+  background: #fff;
+  display: inline-block;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  -moz-animation: bounce 2s infinite;
+  -webkit-animation: bounce 2s infinite;
+  animation: bounce 2s infinite; }
+  /* line 406, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .icon.scroll-indicator::before {
+    position: absolute;
+    top: 0;
+    left: 6px;
+    line-height: 1; }
+
+@media (min-width: 768px) {
+  /* line 414, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .lesson-content {
+    -sgs-span-settings: ("span": 7, "location": 1, "grid": 12, "gutter": 0.33333, "style": "opposite", "start row": true, "end row": false, "fixed gutter": false, "split gutter": null, "gutter property": "margin", "options": (null: null));
+    width: 57.44681%;
+    float: left;
+    margin-right: -100%;
+    margin-left: 0;
+    clear: none; } }
+
+/* line 420, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.lesson-right-content {
+  margin-top: 2em; }
+  @media (min-width: 0) and (max-width: 480px) {
+    /* line 420, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .lesson-right-content {
+      -sgs-span-settings: ("span": 12, "location": 1, "grid": 12, "gutter": 0.33333, "style": "opposite", "start row": true, "end row": true, "fixed gutter": false, "split gutter": null, "gutter property": "margin", "options": (null: null));
+      width: 100%;
+      float: right;
+      margin-left: 0;
+      margin-right: 0;
+      clear: none; } }
+  @media (min-width: 480px) {
+    /* line 420, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .lesson-right-content {
+      -sgs-span-settings: ("span": 5, "location": 8, "grid": 12, "gutter": 0.33333, "style": "opposite", "start row": false, "end row": true, "fixed gutter": false, "split gutter": null, "gutter property": "margin", "options": (null: null));
+      width: 40.42553%;
+      float: right;
+      margin-left: 0;
+      margin-right: 0;
+      clear: none; } }
+  @media (min-width: 768px) {
+    /* line 420, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .lesson-right-content {
+      margin-top: 0; } }
+  /* line 435, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+  .lesson-right-content img {
+    width: 100%; }
+
+/* line 440, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.lesson-description {
+  padding: 0; }
+  /* line 13, ../../../../../../../../../.rvm/gems/ruby-2.3.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss */
+  .lesson-description:after {
+    content: "";
+    display: table;
+    clear: both; }
+
+/* line 445, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+.modal-page-width {
+  margin: 0 auto;
+  width: 100%; }
+  @media (min-width: 1024px) {
+    /* line 445, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modal-page-width {
+      width: 1024px; } }
+  @media (min-width: 1200px) {
+    /* line 445, ../../../sass/layouts/course-info/course-info-course-lesson.scss */
+    .modal-page-width {
+      width: 1200px; } }
+
+/*# sourceMappingURL=course-info-course-lesson.css.map */

@@ -1,0 +1,233 @@
+// Import external libraries.
+@import "compass";
+@import "compass/css3/**";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+@import "../variables/**/*";
+@import "../mixins/**/*";
+
+.l-header {
+	.admin-menu & {
+		margin-top: $admin-menu-margin;
+	}
+}
+
+// .ui.menu {
+// 	background-color: $dark-blue;
+// }
+.header-bar {
+	background-color: transparent;
+	// background-image: url($img-path + 'header-bg.jpg');
+	// background-repeat: no-repeat;
+	// background-size: cover;
+	height: $header-height-mobile;
+	// position: fixed;
+	top: 0;
+	width: 100%;
+	z-index: 101;
+	@include page-width();
+
+	.admin-menu & {
+		top: $admin-menu-margin;
+	}
+
+	@include breakpoint($tab) {
+		height: $header-height;
+	}
+}
+
+.logo-holder {
+
+	height: $header-height-mobile;
+	// width: $logo-width;
+
+	.logo {
+		min-height: $header-btn-height;
+		max-height: $header-height-mobile - 20px;
+		width: 100px;
+		box-sizing: border-box;
+		vertical-align: middle;
+
+		@include breakpoint($tab) {
+			max-height: $header-height - 20px;
+			width: auto;
+			min-width: 100px;
+		}
+	}
+
+	@include breakpoint($tab) {
+		height: $header-height;
+	}
+}
+
+.header-menu-left.ui.menu {
+
+	.ui.menu {
+		background-color: transparent;
+	}
+}
+
+.header-menu-left.ui.large.menu {
+
+	height: $header-height-mobile;
+	line-height: $header-height-mobile;
+	border: 0;
+	margin: 0;
+	// margin: 0 5px; // To match with the 10px (+/- 5px) paper cutting
+
+	@include breakpoint($tab) {
+		height: $header-height;
+		line-height: $header-height;
+	}
+
+	.admin-menu & {
+		margin-top: 0 + $admin-menu-margin;
+	}
+
+	.item.sidebar-icon {
+		font-size: 2em;
+		padding: 0 !important;
+		// background-color: rgba($black, .05);
+
+		i.icon {
+			margin: 0;
+		}
+
+		@include breakpoint($tab) {
+			display: none !important;
+		}
+
+		&:hover {
+			// background-color: rgba($black, .1);
+		}
+	}
+
+	.header-menu-items {
+		margin: 0 1em;
+
+		@include breakpoint(0 $tab) {
+			display: none;
+		}
+
+		@include breakpoint($large) {
+			margin: 0 2em 0 4em;
+		}
+
+		> .item {
+			font-size: 1em;
+			font-weight: bold;
+			height: 30px;
+			margin: 0;
+			padding: 0 1em;
+			// text-transform: uppercase;
+			background-color: transparent;
+			color: rgba($white, .9);
+			@include transform(color .4s ease-in);
+
+			&:hover {
+				color: $white;
+			}
+
+			@include breakpoint($desk) {
+				font-size: 1.4em;
+			}
+		}
+
+		&.ui.left.menu {
+			> .item {
+				@include breakpoint($tab) {
+					border-right: 2px solid $logo-color;
+				}
+			}
+			> [class~='item']:last-of-type {
+				border-right: 0;
+			}
+		}
+	}
+}
+
+.header-menu-right.ui.right.menu {
+	margin: 0 !important;
+	// font-size: .9rem;
+	height: $header-height-mobile;
+	position: relative;
+	top: -2px;
+
+	@include breakpoint($tab) {
+		height: $header-height;
+	}
+
+	@include breakpoint($desk) {
+		// font-size: 1.1rem;
+	}
+
+	.ui.item {
+		font-size: 1.2em;
+		color: $logo-color;
+		height: $header-btn-height;
+		line-height: $header-height-mobile;
+		border: 2px solid $logo-color;
+		@include border-radius(4px);
+		text-transform: capitalize;
+
+		@include breakpoint($tab) {
+			line-height: $header-height;
+		}
+
+		.labeled-icon {
+			font-size: 1.2em;
+			line-height: 2;
+			height: 100%;
+			padding: .4em .5em;
+			width: 2em;
+
+			&::before {
+				position: relative;
+				bottom: 4px;
+			}
+		}
+
+		.menu {
+			.item {
+				font-size: .9em;
+			}
+		}
+	}
+
+	> .item:last-child {
+		margin: 0;
+		padding: 0 1em 0 3em !important;
+	}
+}
+
+.header-flower {
+	height: auto;
+	position: relative;
+	top: ($header-height - $header-btn-height) / 2;
+
+	@include breakpoint($tab) {
+		@include scale(.7);
+		top: 32px;
+	}
+}
+
+.header-feather {
+
+	@include breakpoint(0 $large) {
+		display: none;
+	}
+}

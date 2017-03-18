@@ -1,0 +1,4 @@
+name = Logo Token
+description = Adds a token for the site theme logo
+core = 7.x
+files[] = logo_token.module

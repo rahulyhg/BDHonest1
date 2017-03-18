@@ -1,0 +1,131 @@
+@import "../variables/**/*";
+
+@mixin sprite-common {
+  content: ' ';
+  background-image: url($img-path + 'spritesheet.png');
+  background-repeat: no-repeat;
+  display: block;
+}
+
+@mixin sprite-flute {
+  width: 120px;
+  height: 9px;
+  background-position: -5px -5px;
+}
+
+@mixin sprite-bonus-icon {
+  width: 15px;
+  height: 17px;
+  background-position: -135px -5px;
+}
+
+@mixin sprite-feather-pen {
+  width: 37px;
+  height: 45px;
+  background-position: -160px -5px;
+}
+
+@mixin sprite-header-feather {
+  width: 140px;
+  height: 142px;
+  background-position: -5px -32px;
+}
+
+@mixin sprite-header-flower {
+  width: 34px;
+  height: 34px;
+  background-position: -155px -60px;
+}
+
+@mixin sprite-leaves-down {
+  width: 21px;
+  height: 58px;
+  background-position: -155px -104px;
+}
+
+@mixin sprite-leaves-left {
+  width: 58px;
+  height: 21px;
+  background-position: -5px -184px;
+}
+
+@mixin sprite-leaves-right {
+  width: 58px;
+  height: 21px;
+  background-position: -73px -184px;
+}
+
+@mixin sprite-leaves-up {
+  width: 21px;
+  height: 58px;
+  background-position: -186px -104px;
+}
+
+@mixin sprite-quote-icon {
+  width: 43px;
+  height: 33px;
+  background-position: -155px -172px;
+}
+
+@mixin sprite-title-decorative {
+  width: 35px;
+  height: 17px;
+  background-position: -207px -5px;
+}
+
+@mixin sprite-user-icon {
+  width: 14px;
+  height: 16px;
+  background-position: -207px -31px;
+}
+
+@mixin sprite-welcome-decorative {
+  width: 60px;
+  height: 13px;
+  background-position: -5px -215px;
+}
+
+// Usage:
+// $icons: sprite-map("sprites/icons/*.png"); // define a sprite map
+//
+// // ... later
+//
+// @media only screen and (max-width: 500px) {
+//     .video .overlay {
+//         @include get-sprite($icons, play-btn-large);
+//     }
+// }
+
+// http://compass-style.org/reference/compass/helpers/sprites/
+@mixin get-sprite($map, $sprite, $repeat: no-repeat, $height: true, $width: true) {
+
+  //http://compass-style.org/reference/compass/helpers/sprites/#sprite-file
+  $sprite-image: sprite-file($map, $sprite);
+
+  // http://compass-style.org/reference/compass/helpers/sprites/#sprite-url
+  $sprite-map: sprite-url($map);
+
+  // http://compass-style.org/reference/compass/helpers/sprites/#sprite-position
+  $sprite-position: sprite-position($map, $sprite);
+
+  // Returns background
+  background: $sprite-map $sprite-position $repeat;
+
+  // http://compass-style.org/reference/compass/helpers/image-dimensions/
+  // Checks to see if the user wants height returned
+  @if $height == true {
+    // Gets the height of the sprite-image
+    $sprite-height: image-height($sprite-image);
+    // Returns the height
+    height: $sprite-height;
+  }
+
+  // http://compass-style.org/reference/compass/helpers/image-dimensions/
+  // Checks to see if the user wants height returned
+  @if $width == true {
+    // Gets the width of the sprite-image
+    $sprite-width: image-width($sprite-image);
+    // Returns the width
+    width: $sprite-width;
+  }
+}

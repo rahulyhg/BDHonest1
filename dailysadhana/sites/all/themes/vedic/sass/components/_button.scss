@@ -1,0 +1,16 @@
+@import "../mixins/button";
+
+.ui.button.btn-1 {
+	@include btn-1;
+}
+
+.ui.button.btn-2 {
+	@include btn-2;
+}
+
+.ui.button.arrow {
+	&::after {
+		content: ' ';
+		font-family: Icons;
+	}
+}

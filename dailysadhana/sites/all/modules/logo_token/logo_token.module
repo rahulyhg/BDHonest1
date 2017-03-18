@@ -1,0 +1,33 @@
+<?php
+
+  /**
+   * Implements hook_token_info().
+   */
+  function logo_token_token_info() {
+    $info['tokens']['site']['logo'] = array(
+                'name' => t('Logo'),
+                'description' => t('Site logo'),
+            );
+        return $info;
+    }
+
+  /**
+   * Implements hook_tokens().
+   */
+  function logo_token_tokens($type, $tokens, array $data = array(), array $options = array()) {
+    $replacements = array();
+      foreach ($tokens as $name => $original) {
+        switch ($name) {
+          case 'logo':
+            // see: http://drupal.stackexchange.com/questions/1102/how-to-get-the-logo-path-in-drupal-7
+            global $base_url;
+            drupal_theme_initialize();
+            if (!$logo = theme_get_setting('logo_path')) {
+              $logo = theme_get_setting('logo');
+              $replacements[$original] = $logo;
+            }
+          break;
+        }
+      }
+    return $replacements;
+  }

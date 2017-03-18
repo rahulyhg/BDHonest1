@@ -1,0 +1,48 @@
+<?php
+
+// Define callback for tab.
+function custom_register_form_menu(){
+    return array(
+        'user/registration' => array(
+            'title' => 'Subscribe for Updates',
+            'page callback' => 'custom_register_form_page',
+            'page arguments' => array(1),
+            'access callback' => 'custom_register_form_access',
+            'access arguments' => array(1),
+            'type' => MENU_LOCAL_TASK,
+        ),
+    );
+}
+
+// Show the page
+function custom_register_form_page($uid){
+$nid = 1006;	
+$output=drupal_render(node_view(node_load($nid)));
+return '<div class="reg-text1">COMING SOON!!!</div>'.'</br>'.'<div class="reg-text2">Subscribe to get updates about DailySadhana</div>'.$output;
+	
+    
+}
+
+// Check if user has permission, or views its own page
+function custom_register_form_access($uid){
+    return ($uid == $GLOBALS['user']->uid) || user_access('view user tabs');
+}
+
+// Define permission for administrators
+function custom_register_form_perm(){
+    return array(
+        'view user tabs' => array(
+            'title' => t('View user tabs'), 
+            'description' => t('View user tabs'),
+        ),
+    );
+}
+
+function custom_register_form_form_alter(&$form, &$form_state, $form_id) {
+  if ($form_id === 'user_profile_form' ) { //NOTE: You might want to add role/permission check before disabling the mail field
+    $form['account']['mail']['#disabled'] = true;
+    $form['account']['name']['#disabled'] = true;
+  }
+}
+
+?>

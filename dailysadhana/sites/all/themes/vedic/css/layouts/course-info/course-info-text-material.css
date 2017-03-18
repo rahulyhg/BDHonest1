@@ -1,0 +1,7 @@
+/* line 13, ../../../../../../../../../../../Library/Ruby/Gems/2.0.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss */
+.pane-node-field-text-material .field__item:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+/*# sourceMappingURL=course-info-text-material.css.map */

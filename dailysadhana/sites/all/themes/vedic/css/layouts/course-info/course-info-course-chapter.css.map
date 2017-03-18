@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": ";;AAqBA,aAAc;EACZ,SAAS,EAAE,IAAI",
+"sources": ["../../../sass/layouts/course-info/course-info-course-chapter.scss"],
+"names": [],
+"file": "course-info-course-chapter.css"
+}

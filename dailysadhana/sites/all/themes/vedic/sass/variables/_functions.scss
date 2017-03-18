@@ -1,0 +1,122 @@
+@mixin set-height($value: 100%) {
+	height: $value;
+	min-height: $value;
+}
+
+@mixin vertical-align {
+	position: relative;
+	top: 50%;
+	-webkit-transform: translateY(-50%);
+	-ms-transform: translateY(-50%);
+	transform: translateY(-50%);
+}
+
+@mixin horizontal-align {
+	position: relative;
+	left: 50%;
+	-webkit-transform: translateX(-50%);
+	-ms-transform: translateX(-50%);
+	transform: translateX(-50%);
+}
+
+@mixin transition($transition-property, $transition-time, $method) {
+	-webkit-transition: $transition-property $transition-time $method;
+	-moz-transition: $transition-property $transition-time $method;
+	-ms-transition: $transition-property $transition-time $method;
+	-o-transition: $transition-property $transition-time $method;
+	transition: $transition-property $transition-time $method;
+}
+
+@mixin scale($value) {
+	-webkit-transform: scale($value);
+	/* Safari and Chrome */
+	-moz-transform: scale($value);
+	/* Firefox */
+	-ms-transform: scale($value);
+	/* IE 9 */
+	-o-transform: scale($value);
+	/* Opera */
+	transform: scale($value);
+}
+
+@mixin media-query($mq) {
+	$breakpoint-found: false;
+
+	// Loop through the list of breakpoints we've provided in our settings file.
+	@each $breakpoint in $breakpoints {
+		// Grab the alias and the condition from their respective locations in
+		// the list.
+		$alias: nth($breakpoint, 1);
+		$condition: nth($breakpoint, 2);
+
+		// If the media query we've specified has an alias and a condition...
+		@if $mq == $alias and $condition {
+			// ...tell the mixin that we've found it...
+			$breakpoint-found: true;
+
+			// ...and spit it out here.
+			@media #{$condition} {
+				@content;
+			}
+		}
+	}
+
+	// If the user specifies a non-exitent alias, send them a warning.
+	@if $breakpoint-found == false {
+		@warn "Oops! Breakpoint '#{$mq}' does not exist.";
+	}
+}
+
+@mixin article-overlay {
+	display: block;
+	position: relative;
+
+	&::before,
+	&::after {
+		position: absolute;
+		visibility: hidden;
+		opacity: 0;
+		transition: opacity .2s ease-in;
+	}
+
+	&::before {
+		content: "";
+		width: 100%;
+		height: 100%;
+		display: block;
+		background: rgba($primary-color, .7);
+		border: solid 10px #fff;
+	}
+
+	&::after {
+		content: "+";
+		font-size: 120px;
+		color: #fff;
+		@include scut-center-transform;
+	}
+
+	@include media-query(lap-and-up) {
+		&:hover {
+			&::before,
+			&::after {
+				opacity: 1;
+				visibility: visible;
+			}
+		}
+	}
+}
+
+@mixin box-sizing($box-model: border-box) {
+	-webkit-box-sizing: $box-model;
+	// Safari <= 5
+	-moz-box-sizing: $box-model;
+	// Firefox <= 19
+	box-sizing: $box-model;
+}
+
+@mixin opacity($value) {
+	$ie-value: $value * 100;
+	opacity: $value;
+	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=" + $ie-value + ")";
+	filter: alpha(opacity = $ie-value);
+}

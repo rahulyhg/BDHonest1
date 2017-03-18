@@ -1,0 +1,244 @@
+/* No files to import found in ../../abstractions/**\/* */
+/* line 23, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.ui.modal.course-content-modal {
+  height: 100%; }
+  /* line 26, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .ui.modal.course-content-modal > .content {
+    font-size: 1.2rem;
+    line-height: 2rem; }
+    @media (min-width: 768px) {
+      /* line 26, ../../../sass/layouts/course-info/course-info-course-material.scss */
+      .ui.modal.course-content-modal > .content {
+        font-size: 1.3rem;
+        line-height: 2rem; } }
+  /* line 36, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .ui.modal.course-content-modal .info-table {
+    font-size: .9em; }
+
+/* line 41, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.lesson-completion-material.text-container {
+  text-align: center; }
+  /* line 44, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .lesson-completion-material.text-container img {
+    display: block;
+    margin: 0 auto; }
+
+/* line 50, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.text-container {
+  margin: 1rem; }
+  @media (min-width: 768px) {
+    /* line 50, ../../../sass/layouts/course-info/course-info-course-material.scss */
+    .text-container {
+      margin: 2rem; } }
+
+/* line 58, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.bx-wrapper {
+  margin: 0 !important; }
+
+/* line 62, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.slide-holder {
+  background-color: #fff; }
+  /* line 13, ../../../../../../../../../.rvm/gems/ruby-2.3.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss */
+  .slide-holder:after {
+    content: "";
+    display: table;
+    clear: both; }
+
+/* line 67, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.ui.message.exercise-message {
+  font-size: 1rem; }
+  /* line 70, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .ui.message.exercise-message .header {
+    margin-bottom: .3em; }
+
+/* line 75, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.quiz-question {
+  margin: 1rem; }
+  @media (min-width: 768px) {
+    /* line 75, ../../../sass/layouts/course-info/course-info-course-material.scss */
+    .quiz-question {
+      margin: 2rem 6rem; } }
+  @media (min-width: 1024px) {
+    /* line 75, ../../../sass/layouts/course-info/course-info-course-material.scss */
+    .quiz-question {
+      margin: 2rem 10rem; } }
+  /* line 13, ../../../../../../../../../.rvm/gems/ruby-2.3.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss */
+  .quiz-question .question:after {
+    content: "";
+    display: table;
+    clear: both; }
+
+/* line 96, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .options {
+  margin-left: 1em; }
+/* line 100, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content input[type="radio"],
+.question-content input[type="checkbox"] {
+  margin-right: 1em; }
+/* line 105, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .option-label {
+  display: block;
+  padding: .4em .6em;
+  border-radius: 4px;
+  cursor: pointer; }
+  /* line 111, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .option-label:hover {
+    background-color: #f6f3f3; }
+  /* line 115, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .option-label.blurred {
+    opacity: .25; }
+  /* line 119, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .option-label.correct {
+    background-color: #f6f3f3; }
+  /* line 123, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .option-label .icon {
+    margin-left: .5em; }
+/* line 128, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-hint {
+  color: #bcbcbc;
+  font-size: .8em; }
+/* line 133, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-items {
+  width: 45%;
+  margin-right: 5%;
+  float: left; }
+/* line 139, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-options {
+  width: 50%;
+  float: left; }
+/* line 144, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-item,
+.question-content .match-option {
+  font-size: .9em;
+  display: block;
+  text-align: left;
+  padding: .4em .6em;
+  border-radius: 2px;
+  margin-bottom: .5em;
+  transition: background-color .3s ease, box-shadow .3s ease, height .3s ease; }
+/* line 155, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-item {
+  cursor: pointer;
+  background-color: #f8b447;
+  color: rgba(255, 255, 255, 0.9); }
+  /* line 160, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-item.disabled {
+    background-color: rgba(247, 172, 51, 0.5);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none; }
+  /* line 168, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-item .icon {
+    float: right; }
+/* line 173, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.question-content .match-option {
+  padding: 1em;
+  background-color: #f6f3f3;
+  border: 1px solid #ddd; }
+  /* line 178, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-option .option-text {
+    font-weight: bold; }
+  /* line 182, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-option .correct-item {
+    font-size: .9em;
+    /* background-color: #064771; */
+    color: #fff;
+    margin-bottom: .5em;
+    background-color: rgba(247, 172, 51, 0.9);
+    padding: .5em;
+    border-radius: 2px; }
+  /* line 193, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-option.items-added .option-text {
+    padding-bottom: .5em;
+    margin-bottom: 1em;
+    border-bottom: 1px solid rgba(106, 112, 118, 0.3); }
+  /* line 200, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-option.hover {
+    background-color: rgba(245, 255, 199, 0.5); }
+  /* line 204, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .question-content .match-option.active {
+    border-color: rgba(247, 172, 51, 0.5);
+    box-shadow: 1px 1px 3px rgba(247, 172, 51, 0.8); }
+
+/* line 211, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.course-material {
+  max-width: 800px;
+  margin: 0 auto; }
+
+/* line 216, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.video-bg {
+  background-color: #000; }
+  @media (min-width: 992px) {
+    /* line 216, ../../../sass/layouts/course-info/course-info-course-material.scss */
+    .video-bg {
+      padding-right: 6%;
+      padding-left: 6%; } }
+
+/* line 225, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.video-wrapper {
+  position: relative;
+  padding-bottom: 56%;
+  /* 16:9 */
+  height: 0;
+  overflow: hidden; }
+  /* line 231, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%; }
+
+/* line 240, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.dummy-video {
+  min-height: 400px;
+  background-color: #000; }
+
+/* line 245, ../../../sass/layouts/course-info/course-info-course-material.scss */
+.audio-wrapper {
+  text-align: center;
+  z-index: 999; }
+  @media (min-width: 1024px) {
+    /* line 245, ../../../sass/layouts/course-info/course-info-course-material.scss */
+    .audio-wrapper {
+      margin: 1em 0;
+      position: absolute;
+      top: .5em;
+      right: 2em;
+      width: 250px; } }
+  /* line 258, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .audio-wrapper audio {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 480px; }
+  /* line 265, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .audio-wrapper .ui.toggle.checkbox {
+    margin: 1em 0;
+    display: inline-block;
+    min-width: 25px; }
+    @media (min-width: 1024px) {
+      /* line 265, ../../../sass/layouts/course-info/course-info-course-material.scss */
+      .audio-wrapper .ui.toggle.checkbox {
+        margin-top: 10px;
+        width: 20%;
+        float: left; }
+        /* line 275, ../../../sass/layouts/course-info/course-info-course-material.scss */
+        .audio-wrapper .ui.toggle.checkbox label {
+          float: left; } }
+  /* line 281, ../../../sass/layouts/course-info/course-info-course-material.scss */
+  .audio-wrapper .audioplayer {
+    font-size: 75%;
+    border-radius: 2px;
+    opacity: .95;
+    display: block;
+    margin: 0 auto; }
+    @media (min-width: 768px) {
+      /* line 281, ../../../sass/layouts/course-info/course-info-course-material.scss */
+      .audio-wrapper .audioplayer {
+        width: 60%;
+        margin-right: 20%;
+        float: right; } }
+
+/*# sourceMappingURL=course-info-course-material.css.map */

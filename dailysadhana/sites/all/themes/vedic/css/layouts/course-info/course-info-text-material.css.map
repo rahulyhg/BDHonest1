@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": ";AAYI,iDAAQ;EACN,OAAO,EAAE,EAAE;EACX,OAAO,EAAE,KAAK;EACd,KAAK,EAAE,IAAI",
+"sources": ["../../../../../../../../../../../Library/Ruby/Gems/2.0.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss"],
+"names": [],
+"file": "course-info-text-material.css"
+}

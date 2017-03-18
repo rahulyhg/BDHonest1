@@ -1,0 +1,7 @@
+name = PayPal Vault
+description = Implements PayPal Vault in Drupal Commerce Card On File.
+package = Commerce (PayPal)
+dependencies[] = commerce_paypal_wpp
+dependencies[] = commerce_cardonfile
+core = 7.x
+

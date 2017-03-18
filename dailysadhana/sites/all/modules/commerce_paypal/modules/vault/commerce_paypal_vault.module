@@ -1,0 +1,454 @@
+<?php
+
+/**
+ * @file
+ * Implements PayPal Vault (via WPP checkout process) in Drupal Commerce Card On File.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function commerce_paypal_vault_menu() {
+  $items = array();
+
+  // Add a menu item for capturing authorizations.
+  $items['admin/commerce/orders/%commerce_order/payment/%commerce_payment_transaction/paypal-vault-capture'] = array(
+    'title' => 'Capture',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_paypal_vault_capture_form', 3, 5),
+    'access callback' => 'commerce_paypal_vault_capture_access',
+    'access arguments' => array(3, 5),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
+    'weight' => 2,
+  );
+
+  return $items;
+}
+
+/**
+ * Determines access to the prior authorization capture form for PayPal WPP
+ * Vault credit card transactions.
+ *
+ * @param $order
+ *   The order the transaction is on.
+ * @param $transaction
+ *   The payment transaction object to be captured.
+ * @return bool TRUE or FALSE indicating capture access.
+ * TRUE or FALSE indicating capture access.
+ */
+function commerce_paypal_vault_capture_access($order, $transaction) {
+  // Return FALSE if the transaction isn't for PayPal or isn't awaiting capture.
+  if ($transaction->payment_method != 'paypal_wpp' || $transaction->remote_status != 'authorize') {
+    return FALSE;
+  }
+
+  // Return FALSE if it is more than 29 days past the original authorization.
+  if (REQUEST_TIME - $transaction->created > 86400 * 29) {
+    return FALSE;
+  }
+
+  // Allow access if the user can update payments on this transaction.
+  return commerce_payment_transaction_access('update', $transaction);
+}
+
+/**
+ * Form callback: allows the user to capture a prior authorization via Paypal
+ * Vault.
+ */
+function commerce_paypal_vault_capture_form($form, &$form_state, $order, $transaction) {
+  form_load_include($form_state, 'inc', 'commerce_paypal_wpp', 'includes/commerce_paypal_wpp.admin');
+  $form = commerce_paypal_wpp_capture_form($form, $form_state, $order, $transaction);
+
+  $form['#validate'] = array('commerce_paypal_wpp_capture_form_validate');
+  $form['#submit'] = array('commerce_paypal_vault_capture_form_submit');
+
+  return $form;
+}
+
+/**
+ * Submit handler: process a prior authorization capture via WPP.
+ */
+function commerce_paypal_vault_capture_form_submit($form, &$form_state) {
+  $transaction = $form_state['transaction'];
+  $amount = $form_state['values']['amount'];
+
+  $order = $form_state['order'];
+  $payment_method = $form_state['payment_method'];
+  $authorization_valid = TRUE;
+
+  // If the original authorization was more than 3 days ago, PayPal's honor
+  // period is over and a reauthorization is required before capturing.
+  if (REQUEST_TIME - $transaction->created > 86400 * 3) {
+    // Submit the re-authorization request.
+    $rest = array(
+      'method' => 'POST',
+      'version' => 'v1',
+      'endpoint' => 'payments/authorization/' . $transaction->remote_id . '/reauthorize',
+    );
+    $params = array(
+      'amount' => array(
+        'total' => commerce_paypal_format_amount($amount),
+        'currency' => $transaction->currency_code,
+      ),
+    );
+    $response = commerce_paypal_rest_api_request($payment_method, $rest, $params, $order);
+
+    // If the response contains an authorization ID...
+    if (isset($response->data->id)) {
+      // Update the original transaction with the new ID to use when capturing.
+      $transaction->remote_id = $response->data->id;
+    }
+    else {
+      // Otherwise do not allow the capture to proceed.
+      $transaction->message .= '<br />' . t('Reauthorization failed: @time', array('@time' => format_date(REQUEST_TIME, 'short')));
+      $authorization_valid = FALSE;
+
+      // Display a failure message on the redirect.
+      drupal_set_message(t('PayPal requires a reauthorization before capture after 3 days have passed since the initial authorization.'), 'error');
+      drupal_set_message(t('Reauthorization failed with the following error, so the transaction could not capture and will remain in a pending status.'), 'error');
+      drupal_set_message(check_plain($response->data->message), 'error');
+    }
+  }
+
+  // If the authorization is valid or successfully reauthorized...
+  if ($authorization_valid) {
+    // Determine the remaining balance if the capture is successful.
+    $balance = commerce_payment_order_balance($order);
+    $balance = commerce_currency_convert($balance['amount'], $balance['currency_code'], $transaction->currency_code);
+    $transaction_balance =  $balance - commerce_currency_decimal_to_amount($amount, $transaction->currency_code);
+
+    // Submit the capture request request to PayPal.
+    $rest = array(
+      'method' => 'POST',
+      'version' => 'v1',
+      'endpoint' => 'payments/authorization/' . $transaction->remote_id . '/capture',
+    );
+    $params = array(
+      'amount' => array(
+        'total' => commerce_paypal_format_amount($amount),
+        'currency' => $transaction->currency_code,
+      ),
+    );
+    if ($transaction_balance == 0) {
+      $params['is_final_capture'] = TRUE;
+    }
+    $response = commerce_paypal_rest_api_request($payment_method, $rest, $params, $order);
+
+    $transaction->payload[REQUEST_TIME . '-capture'] = $response;
+
+    if ($response && $response->code == 200) {
+
+      drupal_set_message(t('Prior authorization captured successfully.'));
+
+      // If this capture did not complete the authorization and subsequent
+      // captures can be processed against it, create a follow-up transaction
+      // to represent the remaining authorization amount.
+      if (!$response->data->is_final_capture) {
+        $new_transaction = clone($transaction);
+        unset($new_transaction->transaction_id, $new_transaction->revision_id);
+        $new_transaction->amount = $transaction_balance;
+        commerce_payment_transaction_save($new_transaction);
+
+        drupal_set_message(t("A follow-up transaction was made to represent the remaining authorization amount that can be captured within PayPal's allowed time limit."));
+      }
+
+      // Update the original transaction amount to the actual capture amount,
+      // its remote ID to the capture's transaction ID, and its statuses to
+      // indicate successful payment.
+      $transaction->amount = commerce_currency_decimal_to_amount($amount, $transaction->currency_code);
+      $transaction->remote_id = $response->data->id;
+      $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+      $transaction->remote_status = $response->data->state;
+
+      $transaction->message = t('Name: @name. Transaction status: !status.', array(
+        '@name' => 'Card on File',
+        '!status' => $transaction->status,
+      ));
+
+      // Note the capture in the transaction message.
+      $transaction->message .= '<br />' . t('Captured: @date', array('@date' => format_date(REQUEST_TIME, 'short')));
+
+    }
+    else {
+      // Display an error message but leave the transaction pending.
+      drupal_set_message(t('Prior authorization capture failed, so the transaction will remain in a pending status.'), 'error');
+      drupal_set_message(check_plain($response['L_LONGMESSAGE0']), 'error');
+    }
+
+    // Save the updated original transaction.
+    commerce_payment_transaction_save($transaction);
+
+    // Redirect back to the current order payment page.
+    $form_state['redirect'] = 'admin/commerce/orders/' . $form_state['order']->order_id . '/payment';
+  }
+}
+
+/**
+ * Implements hook_commerce_payment_method_info_alter().
+ *
+ * Used to add the PayPal Vault callbacks to PayPal Website Payments Pro.
+ * The rest of the integration has to be done directly by the WPP module.
+ */
+function commerce_paypal_vault_commerce_payment_method_info_alter(&$methods) {
+  // The WPP payment method is the one that accepts credit cards directly,
+  // rather than as a redirected payment method. As such, we hook into it
+  // in order to enable Card On File functionality through its payment method.
+  if (module_exists('commerce_paypal_wpp') && isset($methods['paypal_wpp'])) {
+    $methods['paypal_wpp']['cardonfile'] = array(
+      'create callback' => 'commerce_paypal_vault_cardonfile_create',
+      'update callback' => 'commerce_paypal_vault_cardonfile_update',
+      'delete callback' => 'commerce_paypal_vault_cardonfile_delete',
+      'charge callback' => 'commerce_paypal_vault_cardonfile_charge',
+    );
+  }
+}
+
+/**
+ * Create callback for PayPal Vault stored cards.
+ */
+function commerce_paypal_vault_cardonfile_create($form, $form_state, $payment_method, $card) {
+  $card_number = $form_state['values']['credit_card']['number'];
+  $card_expire_month = $form_state['values']['credit_card']['exp_month'];
+  $card_expire_year = $form_state['values']['credit_card']['exp_year'];
+  $card_type = $form_state['values']['credit_card']['type'];
+  $card_owner = $form_state['values']['credit_card']['owner'];
+  $name_fragments = explode(' ', $card_owner);
+  $last_name = array_pop($name_fragments);
+  $first_name = implode(' ', $name_fragments);
+ 
+  // Create the params array for the REST API request.
+  $params = array(
+    'payer_id' => 'user_' . $card->uid,
+    'type' => $card_type,
+    'number' => $card_number,
+    'expire_month' => $card_expire_month,
+    'expire_year' => $card_expire_year,
+    'first_name' => $first_name,
+    'last_name' => $last_name,
+  );
+  $rest = array(
+    'endpoint' => 'vault/credit-cards',
+    'method' => 'POST',
+    'version' => 'v1',  
+  );
+  
+  $response = commerce_paypal_rest_api_request($payment_method, $rest, $params);
+
+  // @todo: This needs much better error handling based on the PayPal response.
+  if ($response && $response->code == '201') {
+    // Op success!
+    $card->remote_id = $response->data->id;
+    $card->card_name = $card_owner;
+    return $card;
+  }
+  else {
+    // Our request failed. Whoops.
+    watchdog('commerce_paypal', 'PayPal Vault card on file creation failed: !param', array('!param' => '<pre>' . check_plain(print_r($response, TRUE)) . '</pre>'), WATCHDOG_ERROR);
+    return FALSE;
+  }
+  
+}
+
+/**
+ * Delete callback for PayPal Vault stored cards.
+ */
+function commerce_paypal_vault_cardonfile_delete($form, &$form_state, $payment_method, $card) {
+  // Miraculously, deleting a PayPal Vault card is really easy.
+  // None of the rigmarole from the various CC gateways.
+  $rest = array(
+    'method' => 'DELETE',
+    'endpoint' => 'vault/credit-cards/' . $card->remote_id,
+    'version' => 'v1',
+  );
+  
+  $response = commerce_paypal_rest_api_request($payment_method, $rest);
+
+  // PayPal Vault returns a 204 on a successful deletion.
+  if ($response && $response->code == 204) {
+    return TRUE;
+  }
+  else {
+    // Something screwed up here. Watchdog the response.
+    watchdog('commerce_paypal', 'PayPal Vault card on file deletion failed: !param', array('!param' => '<pre>' . check_plain(print_r($response, TRUE)) . '</pre>'), WATCHDOG_ERROR);
+    return FALSE;
+  }
+}
+
+/**
+ * Update callback for PayPal Vault stored cards.
+ * https://developer.paypal.com/docs/api/#update-a-stored-credit-card
+ *
+ * Doesn't work yet -- waiting on feedback from PayPal Developer Support.
+ */
+function commerce_paypal_vault_cardonfile_update($form, &$form_state, $payment_method, $card) {
+  $card_expire_month = $form_state['values']['credit_card']['exp_month'];
+  $card_expire_year = $form_state['values']['credit_card']['exp_year'];
+  $card_owner = $form_state['values']['credit_card']['owner'];
+  $name_fragments = explode(' ', $card_owner);
+  $last_name = array_pop($name_fragments);
+  $first_name = implode(' ', $name_fragments);
+  $params = array(
+    array(
+      'op' => 'replace',
+      'path' => '/first_name',
+      'value' => $first_name,
+    ),
+    array(
+      'op' => 'replace',
+      'path' => '/last_name',
+      'value' => $last_name,
+    ),
+    array(
+      'op' => 'replace',
+      'path' => '/expire_month',
+      'value' => $card_expire_month,
+    ),
+    array(
+      'op' => 'replace',
+      'path' => '/expire_year',
+      'value' => $card_expire_year,
+    ),
+  );
+  $rest = array(
+    'method' => 'PATCH',
+    'endpoint' => 'vault/credit-cards/' . $card->remote_id,
+    'version' => 'v1',
+  );
+
+  $response = commerce_paypal_rest_api_request($payment_method, $rest, $params);
+
+  // PayPal Vault returns a 200 on a successful update.
+  if ($response && $response->code == 200) {
+    return TRUE;
+  }
+  else {
+    // Something screwed up here. Watchdog the response.
+    watchdog('commerce_paypal', 'PayPal Vault card on file update failed: !param', array('!param' => '<pre>' . check_plain(print_r($response, TRUE)) . '</pre>'), WATCHDOG_ERROR);
+    return FALSE;
+  }
+}
+
+/**
+ * Charge callback for PayPal Vault stored cards.
+ *
+ * @param array $payment_method
+ *  The payment method instance definition array.
+ * @param object $card
+ *   The stored credit card data array to be processed
+ * @param object $order
+ *   The order object that is being processed
+ * @param array $charge
+ *   The price array for the charge amount with keys of 'amount' and 'currency'
+ *   If null the total value of the order is used.
+ *
+ * @return
+ *   TRUE if the transaction was successful, FALSE otherwise.
+ *   FALSE will cause the checkout form (if we are involved in one)
+ *   to be rebuilt with the appropriate errors.
+ */
+function commerce_paypal_vault_cardonfile_charge($payment_method, $card, $order, $charge = NULL) {
+
+  if (!isset($charge)) {
+    $wrapper = entity_metadata_wrapper('commerce_order', $order);
+    $charge = commerce_line_items_total($wrapper->commerce_line_items);
+  }
+
+  $amount = commerce_currency_amount_to_decimal($charge['amount'], $charge['currency_code']);
+  $rest = array(
+    'method' => 'POST',
+    'version' => 'v1',
+    'endpoint' => 'payments/payment',
+  );
+  $params = array(
+    'intent' => ($payment_method['settings']['txn_type'] == 'auth_capture' ? 'sale' : 'authorize'),
+    'payer' => array(
+      'payment_method' => 'credit_card',
+      'funding_instruments' => array(
+        array(
+          'credit_card_token' => array(
+            'credit_card_id' => $card->remote_id,
+            'payer_id' => 'user_' . $card->uid,
+          ),
+        ),
+      ),
+    ),
+    'transactions' => array(
+      array(
+        'amount' => array(
+          'total' => commerce_paypal_format_amount($amount),
+          'currency' => $charge['currency_code'],
+        ),
+        'description' => "Order number $order->order_number",
+      ),
+    ),
+  );
+  
+  $response = commerce_paypal_rest_api_request($payment_method, $rest, $params, $order);
+
+  // @todo: needs better error checking?
+  $transaction = commerce_payment_transaction_new($payment_method['method_id'], $order->order_id);
+  $transaction->instance_id = $payment_method['instance_id'];
+  $transaction->remote_id = isset($response->data->id) ? $response->data->id : '';
+  $transaction->amount = $charge['amount'];
+  $transaction->currency_code = $charge['currency_code'];
+  $transaction->payload[REQUEST_TIME] = $response;
+  $transaction->remote_status = isset($response->data->state) ? $response->data->state : 'failed';
+  if (isset($response->data->intent) && $response->data->intent == 'authorize' && isset($response->data->state) && $response->data->state = 'approved') {
+    // Set our remote status to authorize so we can capture it later.
+    $transaction->remote_status = 'authorize';
+    if (isset($response->data->transactions[0]->related_resources[0]->authorization->id)) {
+      // Save our authorization id for future use with capture.
+      // @todo: find a way to get this data easily?
+      $transaction->remote_id = $response->data->transactions[0]->related_resources[0]->authorization->id;
+    } else {
+      // Set the transaction to failed as we need the authorization id to
+      // capture this order.
+      $transaction->remote_status = 'failed';
+    }
+  }
+  if (in_array($transaction->remote_status, array('approved', 'created', 'authorize'))) {
+    switch ($payment_method['settings']['txn_type']) {
+      case COMMERCE_CREDIT_AUTH_ONLY:
+        $transaction->status = COMMERCE_PAYMENT_STATUS_PENDING;
+        break;
+      case COMMERCE_CREDIT_AUTH_CAPTURE:
+        $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+        break;
+      case COMMERCE_CREDIT_CAPTURE_ONLY:
+        $transaction->status = COMMERCE_PAYMENT_STATUS_SUCCESS;
+        break;
+    }
+  }
+  else {
+    $transaction->status = COMMERCE_PAYMENT_STATUS_FAILURE;
+  }
+  $transaction->message = t('Name: @name. Transaction status: !status.', array(
+    '@name' => 'Card on File',
+    '!status' => $transaction->status,
+  ));
+  
+  commerce_payment_transaction_save($transaction);
+
+  // @todo: Check for other error types and do deactivation of expired/messed-up cards here.
+  if ($transaction->status == COMMERCE_PAYMENT_STATUS_FAILURE) {
+    if (isset($response->data->details)) {
+      $messages = array();
+      foreach ($response->data->details as $detail) {
+        $messages[] = $detail->field . ' -- ' . $detail->issue;
+      }
+      drupal_set_message(t('We received the following error processing your card. Please enter your information again or try a different card.'), 'error');
+      watchdog('commerce_paypal', 'PayPal Vault card on file charge failed: !param', array('!param' => implode('<br/>', array_map('check_plain', $messages))), WATCHDOG_ERROR);
+    }
+    else {
+      drupal_set_message(t('We received an error while processing your card. Please try a different card or contact a site administrator for assistance.'), 'error');
+    }
+    return FALSE; 
+  }
+  
+  return TRUE;
+}
+
+function commerce_paypal_format_amount($amount) {
+  return number_format((float) $amount, 2, '.', '');
+}

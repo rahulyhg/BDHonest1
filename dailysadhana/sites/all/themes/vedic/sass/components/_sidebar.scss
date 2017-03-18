@@ -1,0 +1,116 @@
+// Import external libraries.
+@import "compass";
+@import "compass/css3/**";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+@import "../../variables/**/*";
+@import "../../mixins/**/*";
+
+.l-sidebar {
+	font-size: 1.2em;
+	width: 4em;
+	overflow: hidden;
+	border-top-right-radius: .5em;
+	border-bottom-right-radius: .5em;
+	@include transition(width, .4s, ease-in);
+
+	
+	&:hover {
+		width: $sidebar-width;
+	}
+
+	@include breakpoint($tab) {
+		position: fixed;
+		left: 0;
+		z-index: 10000;
+		top: 21rem;
+		// top: $header-height + 15px;
+		//
+		// .admin-menu & {
+		// 	top: $header-height + $admin-menu-margin + 15px;
+		// }
+	}
+}
+
+.l-sidebar-links.ui.vertical.menu {
+	margin: 0;
+	width: $sidebar-width;
+
+	// Sidebar links for mobile only
+	@include breakpoint(0 $tab) {
+		height: 100%;
+		background-color: $white;
+		position: absolute;
+		width: $sidebar-mobile-width !important;
+		top: 0;
+		right: 0;
+		margin-right: 100%;
+
+		.contextual-links-region {
+			position: fixed;
+			width: $sidebar-mobile-width;
+		}
+	}
+
+	.item {
+		font-size: 1.2rem;
+		color: rgba($white, .8);
+		background-color: $theme-color-2;
+		@include transition(color, .4s, ease);
+		padding: 0;
+		line-height: 5em;
+		border-left: 6px solid lighten($theme-color-2, 20%);
+
+		@include breakpoint($tab) {
+			color: rgba($white, .9);
+		}
+
+		&.even {
+			background-color: darken($theme-color-2, 5%);
+		}
+
+		.icon {
+			font-size: 1.8em;
+			float: left;
+			margin: 0 .6em;
+		}
+
+		&::before {
+			display: none;
+			height: 0;
+		}
+
+		&:hover {
+			color: $white;
+			background-color: $theme-color-2-dark-2;
+		}
+
+		&.active.item {
+			background-color: $theme-color-2-dark-2;
+			border-left: 6px solid $theme-color-2-dark-4;
+
+			@include breakpoint($tab) {
+				color: $white;
+			}
+		}
+	}
+
+	.menu .item { // Secondary menu
+		padding: .928571em 1.14286em;
+		padding-left: 2em;
+	}
+}

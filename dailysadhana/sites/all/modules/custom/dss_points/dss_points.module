@@ -1,0 +1,717 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function dss_points_menu() {
+	$items = array();
+	$items['mybonus'] = array(
+    'title' => 'My Bonus',    
+    'page callback' => 'custom_points_page',   
+    'access callback' => 'user_is_logged_in',
+  );
+  $items['mybonus/overview'] = array(
+    'title' => 'My Bonus',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+   $items['mybonus/treasure'] = array( //this creates a URL that will call this form at "examples/form-example"
+    'title' => 'Treasure Chest', //page title
+    'description' => 'Redeem points to reveal the treasure.',
+    'page callback' => 'drupal_get_form', //this is the function that will be called when the page is accessed.  for a form, use drupal_get_form
+    'page arguments' => array('treasure_page'), //put the name of the form here
+    'access callback' => 'user_is_logged_in',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['mybonus/mytreasure']=array( //this creates a URL that will call this form at "examples/form-example"
+    'title' => 'My Treasures', //page title
+    'description' => 'Treasures that you have accumulated using bonus points:',
+    'page callback' => 'mytreasure',
+    'access callback' => 'user_is_logged_in',
+    'type' => MENU_LOCAL_TASK,
+  );
+  return $items;
+}
+/**
+ * Implements hook_form_alter().
+ */
+function dss_points_form_alter( &$form, &$form_state,$form_id ){	   
+	if($form_id =='webform_client_form_713'){
+		$form['#validate'][] = 'dss_points_online_submission_validate';	
+	}
+	
+	if($form_id =='user_login') {
+		
+	}
+	if($form['#id'] =="views-exposed-form-blogs-panel-pane-1"){		
+		unset ($form['sort_bef_combine']['#title']);
+		unset ($form['sort_by']['#title']);
+		   $infos = $form['#info'];
+    foreach ($infos as $key => $filter) {
+      $label = $filter['label'];
+      unset($form['#info'][$key]['label']);
+      $form[$filter['value']]['#attributes'] = array('placeholder' => array($label));
+    }  
+   
+	
+	}
+
+}
+function dss_points_online_submission_validate($form, &$form_state) {
+	$points = isset($form_state['values']['submitted']['points']) ? $form_state['values']['submitted']['points'] :'';
+	if(!empty($points) && is_numeric($points)){
+	   global $user;
+      $uid = $user->uid;
+      $userpoints = "SELECT sum( points ) total_points FROM userpoints  WHERE uid =".$uid ."  GROUP BY uid ";
+      $actual_points = db_query($userpoints)->fetchField();
+      if($actual_points< $points){
+      	form_set_error('points', t("You don't have enough points. Maximum redeemable points is what you already have in your My Bonus section."));
+      }
+      else{
+        $params = array(
+                          'uid' => $user->uid,
+                         'points' => -$points,
+                         'operation' => 'Online shop',
+                        'tid' => 75,
+             );  
+             userpoints_userpointsapi($params);      	
+      
+      }
+	} 
+} 
+
+/**
+ * Implements hook_js_alter().
+ */
+ function dss_points_js_alter(&$javascript) {
+	if(arg(0) =='blog'){	    
+            unset($javascript['sites/all/themes/vedic/semantic/dist/semantic.js']);
+        } 
+	   
+}
+/**
+ * Implements hook_init().
+ */
+function dss_points_init() {
+	/*   if(arg(0) !='blog'){
+	     drupal_add_js(drupal_get_path('theme', 'vedic') . '/semantic/dist/semantic.js');
+	   }		
+	   */
+	   
+	global $user; 
+	if(count(arg()) == 2 && arg(0) == 'node' && is_numeric(arg(1))) {
+		
+		$nid = arg(1);
+		$node = node_load($nid);
+		if ($node && $node->type == 'redeemable_products') { 
+			$redeem_type = isset($node->field_redeem_type['und'][0]['value']) ? $node->field_redeem_type['und'][0]['value']: '';
+			$downloads_data = variable_get('redeem_product_download_data', true);
+			//print_r($downloads_data);
+			if($redeem_type == 'field_short_mp3_points' || $redeem_type == 'field_long_mp3_points' || $redeem_type == 'field_special_video_download_poi'){
+				
+				
+				if(!empty($downloads_data) && isset($downloads_data[$nid]) && isset($downloads_data[$nid][$user->uid])) {
+					if($downloads_data[$nid][$user->uid] == 3) {
+						$flag = flag_get_flag('treasure_download_limit');
+						$flag_points = flag_get_flag('points_redeemed');
+						$flag->flag('flag', $nid, user_load($user->uid), TRUE);
+						$flag_points->flag('unflag',$nid);
+						$msg_html = "<div class='limit-warning'>Your Free Downloading Limit Reached.</div>";
+						drupal_add_js('(function($) {
+							$(document).ready(function () {
+								if($(".download-file") != null){
+									$(".download-file").addClass("limit-reached");
+									$(".download-file a").attr("href", "#");
+									$(".download-file").append("'.$msg_html.'");
+								}
+							});
+						})(jQuery);', 'inline');
+						
+					}
+					elseif($downloads_data[$nid][$user->uid] <= 2) {
+						$download_count = $downloads_data[$nid][$user->uid];
+						$downloads_data[$nid][$user->uid] = $download_count+1;
+					}
+				}
+				elseif(!empty($downloads_data)) {
+					if(isset($downloads_data[$nid])) {
+						$downloads_data[$nid][$user->uid] = 1;
+					}
+					else {
+						$downloads_data[$nid] = array($user->uid => 1);
+					}
+				}
+				elseif(empty($downloads_data)) {
+					//print_r($downloads_data);
+					$downloads_data[$nid] = array($user->uid => 1);
+				}
+				
+			}
+			elseif($redeem_type == 'field_book_download') {
+				if(!empty($downloads_data) && isset($downloads_data[$nid]) && isset($downloads_data[$nid][$user->uid])) {
+					if($downloads_data[$nid][$user->uid] == 3) {
+						$flag = flag_get_flag('treasure_download_limit');
+						$flag_points = flag_get_flag('points_redeemed');
+						$flag->flag('flag', $nid, user_load($user->uid), TRUE);
+						$flag_points->flag('unflag',$nid);
+						$msg_html = "<div class='limit-warning'>Your Free Downloading Limit Reached.</div>";
+						drupal_add_js('(function($) {
+							$(document).ready(function () {
+								if($(".content") != null){
+									$(".content").addClass("limit-reached");
+									$(".content a").attr("href", "#");
+									$(".content").append("'.$msg_html.'");
+								}
+							});
+						})(jQuery);', 'inline');
+						
+					}
+					elseif($downloads_data[$nid][$user->uid] == 0) {
+						$download_count = $downloads_data[$nid][$user->uid];
+						$downloads_data[$nid][$user->uid] = $download_count+1;
+					}
+				}
+				elseif(!empty($downloads_data)) {
+					if(isset($downloads_data[$nid])) {
+						$downloads_data[$nid][$user->uid] = 1;
+					}
+					else {
+						$downloads_data[$nid] = array($user->uid => 1);
+					}
+				}
+				elseif($downloads_data == 1) {
+					$downloads_data[$nid] = array($user->uid => 1);
+				}
+				
+			}
+			elseif($redeem_type == 'field_special_video_download_poi') {
+				if(!empty($downloads_data) && isset($downloads_data[$nid]) && isset($downloads_data[$nid][$user->uid])) {
+					if($downloads_data[$nid][$user->uid] == 3) {
+						$flag = flag_get_flag('treasure_download_limit');
+						$flag_points = flag_get_flag('points_redeemed');
+						$flag->flag('flag', $nid, user_load($user->uid), TRUE);
+						$flag_points->flag('unflag',$nid);
+						$msg_html = "<div class='limit-warning'>Your Free Downloading Limit Reached.</div>";
+						drupal_add_js('(function($) {
+							$(document).ready(function () {
+								if($(".pane-node-field-file") != null){
+									$(".field__items").hide();
+									$(".pane-node-field-file").addClass("limit-reached");
+									$(".pane-node-field-file").append("'.$msg_html.'");
+								}
+							});
+						})(jQuery);', 'inline');
+						
+					}
+					elseif($downloads_data[$nid][$user->uid] == 0) {
+						$download_count = $downloads_data[$nid][$user->uid];
+						$downloads_data[$nid][$user->uid] = $download_count+1;
+					}
+				}
+				elseif(!empty($downloads_data)) {
+					if(isset($downloads_data[$nid])) {
+						$downloads_data[$nid][$user->uid] = 1;
+					}
+					else {
+						$downloads_data[$nid] = array($user->uid => 1);
+					}
+				}
+				elseif(empty($downloads_data)) {
+					$downloads_data[$nid] = array($user->uid => 1);
+				}
+			}
+			variable_set('redeem_product_download_data', $downloads_data);
+		}
+		
+	}
+}
+/**
+ * Implements hook_theme().
+ */
+ function dss_points_theme() {
+ 	 return array(
+    'dss_points_settings' => array(
+      'variables' => array(      
+        'items' => NULL,
+        'form' => NULL,
+       ),
+      'template' => 'templates/dss-points--settings',
+    ),
+    'treasure_page' => array(
+      'render element' =>'form',
+      'template' => 'templates/dss-points--settings--form',
+    ),
+  );
+ }
+function theme_treasure_page($variables) {
+	 $form = $variables['form'];
+	 return $variables;
+}
+function mytreasure(){
+	global $user;
+	$uid = $user->uid;
+	$limit_class = '';
+	$sql ="select entity_id from flagging  where fid = 3 and uid =".$uid;
+	$result = db_query($sql);
+	$content = '<div class="mytreasure-items">';
+	if(!empty($result)){		
+		foreach ($result as $res){
+         if(!empty($res)){
+         	 $nid = $res->entity_id;
+			   $node = node_load($nid);
+			   $body_text = isset($node->body['und'][0]['value']) ? $node->body['und'][0]['value']:'';
+			   $uri = isset($node->field_banner_image['und'][0]['uri']) ? $node->field_banner_image['und'][0]['uri']:'';
+			   $flag_mytreasure = flag_get_flag('my_treasure');
+			   if ($flag_mytreasure->is_flagged($nid,$uid)){
+			   	$limit_class = ' dlimit-over';
+			   } 
+			           
+			   if(!empty($uri)) {
+				  $img = file_create_url($uri);
+				  $banner_img = '<img src="'.$img.'" style="width: 300px;">';
+				  $content .= '<div class ="banner_image'.$limit_class.'"><a href="/node/'.$nid.'">'.$banner_img.' </a><div class="pname"><b>'.$node->title.'</b></div><div class="pbody">'.$body_text.'</div></div>';
+			  }
+         }			
+	   }
+	}
+	if(empty($content)){
+	   $content .= '<div class ="reddem_msg">You have no treasures </div> ';	
+	}
+	$content .= '</div>';
+	global $base_url;
+   $css_path = $base_url .'/sites/all/themes/vedic/semantic/dist/semantic.css'; 
+   drupal_add_css($css_path, array('group' => CSS_THEME, 'type' => 'file', 'weight' => -125, 'preprocess' => FALSE ));
+	return theme('dss_points_settings', array('items' => $content)); 
+
+}
+
+function treasure_page($form, &$form_state) {
+    global $user;
+	$query = new EntityFieldQuery();
+   $result = $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', 'redeemable_products')
+    ->execute();
+   $nodes = node_load_multiple(array_keys($result['node']));
+   
+	foreach($nodes as $node) {
+		$nid = $node->nid;
+		$body_text = isset($node->body['und'][0]['value']) ? $node->body['und'][0]['value']:'';
+		$uri = $node->field_banner_image['und'][0]['uri'];
+   	$img = file_create_url($uri);
+   	$hero_image = array(
+                        'style_name' => 'medium',
+                        'path' => $uri,
+                        'width' => '',
+                        'height' => '', 
+            );   
+   	$banner_img = theme('image_style',$hero_image);//'<img src="'.$img.'" style="width: 300px;">';
+   	$redeem_type = $node->field_redeem_type['und'][0]['value'];
+   	switch($redeem_type) {
+		case 'field_short_mp3_points':
+			$points_needed = $node->field_short_mp3_points['und'][0]['value'];	
+			break;			
+		case 'field_long_mp3_points':
+			$points_needed = $node->field_short_mp3_points['und'][0]['value'];
+			break;
+			
+		case 'field_special_video_download_poi':
+			$points_needed = $node->field_short_mp3_points['und'][0]['value'];
+			break;
+			
+		case 'field_special_video_online_point':
+			$points_needed = $node->field_short_mp3_points['und'][0]['value'];		
+			break;
+		case 'field_book_download':
+			$points_needed = $node->field_short_mp3_points['und'][0]['value'];		
+			break;
+			
+		default:
+		}
+		$flag = flag_get_flag('points_redeemed');
+		if (!($flag->is_flagged($nid,$user->uid))){        
+		   $points[$nid] = '<div class ="banner_image">'.$banner_img.'<div class="pname">'.$node->title.'</div><div class="pbody">'.$body_text.'</div></div>'.$points_needed.' Points';
+		}
+    }
+    if(!empty($points)){
+    	$form['points_type'] = array(     
+       '#type' => 'radios',
+        '#options' => $points,
+      );	
+      /* $form['reedem_online'] = array(     
+         '#type' => 'item',
+         '#markup' => '<div class="online-gift">
+              <a href="/content/online-gift-item?width=600&height=400&iframe=true" class="colorbox-load"> Online gift items </a></div>',
+         );	*/
+   
+	  $form['submit'] = array(
+	    '#prefix' =>'<div class ="reddem_save">',
+		 '#type' => 'submit', 
+		 '#value' =>	'Redeem Your Points' ,
+		 '#suffix' =>'</div>',
+	  );	
+      
+    }
+    else {
+    	 $form['reedem_empty_items'] = array(     
+         '#type' => 'item',
+         '#markup' => '<div class="online-gift">
+             There are no redeemable products. </div>',
+      );	
+   
+    }
+  
+	//return theme('dss_points_settings', array('form' => $form)); 
+   return $form;
+}
+function treasure_page_validate($form, &$form_state){
+  $nid = $form_state['values']['points_type'] ;
+  if(empty($nid)){
+    form_set_error('points_type',t('Please select the points'));
+  }
+}
+
+function treasure_page_submit($form, &$form_state) {	
+	global $user;
+	$uid = $user->uid;
+	$nid = $form_state['values']['points_type'] ;
+	$node = node_load($nid);
+   $redeem_type = isset($node->field_redeem_type['und'][0]['value']) ? $node->field_redeem_type['und'][0]['value']:''  ;
+   if(!empty($redeem_type)){
+     switch($redeem_type) {			
+			case 'field_short_mp3_points':
+			   $shortpoints = isset($node->field_short_mp3_points['und'][0]['value']) ?$node->field_short_mp3_points['und'][0]['value'] :'0' ;
+				break;
+			
+			case 'field_long_mp3_points':
+            $shortpoints = isset($node->field_short_mp3_points['und'][0]['value']) ?$node->field_short_mp3_points['und'][0]['value'] :'0' ;
+				break;
+			
+			case 'field_special_video_download_poi':
+             $shortpoints = isset($node->field_short_mp3_points['und'][0]['value']) ?$node->field_short_mp3_points['und'][0]['value'] :'0' ;
+             break;
+			case 'field_book_download':
+             $shortpoints = isset($node->field_short_mp3_points['und'][0]['value']) ?$node->field_short_mp3_points['und'][0]['value'] :'0' ;
+             break;
+			
+			default:
+            $shortpoints = isset($node->field_short_mp3_points['und'][0]['value']) ?$node->field_short_mp3_points['und'][0]['value'] :'0' ;
+            break;
+	 } 
+	 $flag = flag_get_flag('points_redeemed');
+	 $flag_mytreasure = flag_get_flag('my_treasure');
+    if ($flag->is_flagged($node->nid,$user->uid) && $flag_mytreasure->is_flagged($node->nid,$user->uid)){         
+           drupal_goto('node/' . $nid);
+    }
+    else{ 
+      $current_user_points = userpoints_get_current_points($user->uid,'all');    
+      if(!empty($shortpoints)){
+         if($current_user_points >= $shortpoints ){            
+             $params = array(
+                          'uid' => $user->uid,
+                         'points' => -$shortpoints,
+                         'operation' => 'admin',
+                        'tid' => 75,
+             );  
+             userpoints_userpointsapi($params);  
+            $downloads_data = variable_get('redeem_product_download_data', true);
+                	
+            $flag = flag_get_flag('points_redeemed');
+            $flag_mytreasure = flag_get_flag('my_treasure');
+            $flag_download_limit = flag_get_flag('treasure_download_limit');
+            $flag->flag('flag', $nid, user_load($uid), TRUE);
+            $flag_mytreasure->flag('flag', $nid, user_load($uid), TRUE);
+            if($flag_download_limit->is_flagged($nid,$uid)) {
+            	$flag_download_limit->flag('unflag', $nid);
+            	if(isset($downloads_data[$nid][$uid])) {
+            		$downloads_data[$nid][$uid] = 0;
+            		variable_set('redeem_product_download_data', $downloads_data);
+            	}	 
+            }
+            drupal_goto('node/' . $nid);  
+            
+         }
+         else{
+         	$message = "Not Enough Points Yet for this ! Choose something else from the treasure chest!";
+         	drupal_set_message($message);
+         	//$form_state['redirect'] = array($path ,array('attributes' => array('class' => 'colorbox-load')));
+            //drupal_goto('node/' . $nid);  
+         }
+      }
+    }
+   }
+				
+
+} // submit
+
+
+
+
+/**
+ * Implements hook_cron().
+ */
+function dss_points_cron() {
+  $month_stamp = strtotime('+7 days'); // Week before subscription ends
+  $month = date('d/m/y',$month_stamp);
+  $query = new EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'commerce_license')
+    ->propertyCondition('status', COMMERCE_LICENSE_ACTIVE);
+  $results = $query->execute();
+  if (!empty($results['commerce_license'])) {
+    $license_ids = array_keys($results['commerce_license']);
+	foreach($license_ids as $lid) {
+    		$res = db_query("SELECT uid, expires, product_id FROM commerce_license WHERE license_id = $lid");
+    		foreach($res as $r) {
+    				$uid = $r->uid;
+	 				$expires_stamp = $r->expires;
+	 				$product_id = $r->product_id;
+	 				$product = commerce_product_load($product_id);
+	 				$p_title = $product->title;
+	 				$expires = date('d/m/y',$expires_stamp);
+	 				$expires_display = date('d M Y', $expires_stamp);
+	 				$variable = $uid.'-'.$lid.'-expires-week1';
+	 				$value = variable_get($variable);
+	 				if($value != 'true') {
+	 					if($month == $expires) {
+	 						$user_det = user_load($uid);
+	 						$user_mail = $user_det->mail;
+	 						$uname = $user_det->field_full_name['und'][0]['value'];
+	 						$to = $user_mail;
+							$subject = 'License Expiration Notification';
+							$message = '<div style="background: #8a8a8a;padding: 20px;">
+							<div style="width: 80%; margin: 0 auto; background: #f9ae1a; padding: 20px; color: #fff;">
+							<img src="http://dailysadhana.swamimukundananda.org/sites/all/themes/vedic/images/logo.png"/>
+							</div>
+							<div style="width: 80%; margin: 0 auto; background: #fff; padding: 20px;">
+							Hi '.$uname.',<br/>
+							Your License for '.$p_title.' will expire on '.$expires_display.'.
+							</div>
+							<div style="width: 80%;margin: 0 auto;background: #052653;padding: 20px; color: #fff;">
+							--  '.variable_get('site_name').' team
+							</div>
+							</div>';
+							$headers = "Content-type:text/html;charset=UTF-8" . "\r\n";
+							$headers .= 'From: Daily Sadhana <info@mydailysadhana.org>' . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+							mail($to, $subject, $message, $headers);
+							variable_set($variable,'true');
+	 					}
+	 				}
+	 		}
+	}
+  }
+  
+  $month_stamp = strtotime('-1 day'); // Day after subscription ends and has not yet renewed
+  $month = date('d/m/y',$month_stamp);
+  $query = new EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'commerce_license')
+    ->propertyCondition('status', COMMERCE_LICENSE_ACTIVE);
+  $results = $query->execute();
+  if (!empty($results['commerce_license'])) {
+    $license_ids = array_keys($results['commerce_license']);
+	foreach($license_ids as $lid) {
+    		$res = db_query("SELECT uid, expires, product_id FROM commerce_license WHERE license_id = $lid");
+    		foreach($res as $r) {
+    				$uid = $r->uid;
+	 				$expires_stamp = $r->expires;
+	 				$product_id = $r->product_id;
+	 				$product = commerce_product_load($product_id);
+	 				$p_title = $product->title;
+	 				$expires = date('d/m/y',$expires_stamp);
+	 				$expires_display = date('d M Y', $expires_stamp);
+	 				$variable = $uid.'-'.$lid.'-expires-day1';
+	 				$value = variable_get($variable);
+	 				if($value != 'true') {
+	 					if($month == $expires) {
+	 						$user_det = user_load($uid);
+	 						$user_mail = $user_det->mail;
+	 						$uname = $user_det->field_full_name['und'][0]['value'];
+	 						$to = $user_mail;
+							$subject = 'License Expiration Notification';
+							$message = '<div style="background: #8a8a8a;padding: 20px;">
+							<div style="width: 80%; margin: 0 auto; background: #f9ae1a; padding: 20px; color: #fff;">
+							<img src="http://dailysadhana.swamimukundananda.org/sites/all/themes/vedic/images/logo.png"/>
+							</div>
+							<div style="width: 80%; margin: 0 auto; background: #fff; padding: 20px;">
+							Hi '.$uname.',<br/>
+							Your License for '.$p_title.' will on '.$expires_display.'.
+							</div>
+							<div style="width: 80%;margin: 0 auto;background: #052653;padding: 20px; color: #fff;">
+							--  '.variable_get('site_name').' team
+							</div>
+							</div>';
+							$headers = "Content-type:text/html;charset=UTF-8" . "\r\n";
+							$headers .= 'From: Daily Sadhana <info@mydailysadhana.org>' . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+							mail($to, $subject, $message, $headers);
+							variable_set($variable,'true');
+	 					}
+	 				}
+	 		}
+	}
+  }
+  
+  $month_stamp = strtotime('-7 days'); // Week after subscription ends and has not renewed account
+ $month = date('d/m/y',$month_stamp);
+	$res = db_query("SELECT * FROM commerce_license WHERE status <> 2");
+    		foreach($res as $r) {
+    				$lid = $r->license_id;
+    				$uid = $r->uid;
+	 				$expires_stamp = $r->expires;
+	 				$product_id = $r->product_id;
+	 				$product = commerce_product_load($product_id);
+	 				$p_title = $product->title;
+	 				$expires = date('d/m/y',$expires_stamp);
+	 				$expires_display = date('d M Y', $expires_stamp);
+	 				$variable = $uid.'-'.$lid.'-expires-week2';
+	 				$value = variable_get($variable);
+	 				if($value != 'true') {
+	 					if($month == $expires) {
+	 						$res1 = db_query("SELECT * FROM commerce_license WHERE uid = $uid AND status = 2");
+							$fl = 'false';
+							foreach($res1 as $r1) {
+								if(!empty($r1)) {
+									$fl = 'true';
+								}
+							}
+							if($fl == 'false') {
+								$user_det = user_load($uid);
+	 							$user_mail = $user_det->mail;
+	 							$uname = $user_det->field_full_name['und'][0]['value'];
+	 							$to = $user_mail;
+								$subject = 'License Expiration Notification';
+								$message = '<div style="background: #8a8a8a;padding: 20px;">
+								<div style="width: 80%; margin: 0 auto; background: #f9ae1a; padding: 20px; color: #fff;">
+								<img src="http://dailysadhana.swamimukundananda.org/sites/all/themes/vedic/images/logo.png"/>
+								</div>
+								<div style="width: 80%; margin: 0 auto; background: #fff; padding: 20px;">
+								Hi '.$uname.',<br/>
+								Your License for '.$p_title.' has been expired on '.$expires_display.'.
+								</div>
+								<div style="width: 80%;margin: 0 auto;background: #052653;padding: 20px; color: #fff;">
+								--  '.variable_get('site_name').' team
+								</div>
+								</div>';
+								$headers = "Content-type:text/html;charset=UTF-8" . "\r\n";
+								$headers .= 'From: Daily Sadhana <info@mydailysadhana.org>' . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+								mail($to, $subject, $message, $headers);
+								variable_set($variable,'true');
+							}
+						}
+	 				}
+	 		}
+
+$today_stamp = strtotime('now'); // Expire License
+$today = date('d/m/y',$today_stamp);
+$query = new EntityFieldQuery();
+  $query
+    ->entityCondition('entity_type', 'commerce_license')
+    ->propertyCondition('status', COMMERCE_LICENSE_ACTIVE);
+  $results = $query->execute();
+if (!empty($results['commerce_license'])) {
+	$license_ids = array_keys($results['commerce_license']);
+	foreach($license_ids as $lid) {
+    		$res = db_query("SELECT * FROM commerce_license WHERE license_id = $lid");
+    		foreach($res as $r) {
+    			$uid = $r->uid;
+    			$expires_stamp = $r->expires;
+    			$expires = date('d/m/y',$expires_stamp);
+    			if($today == $expires) {
+    			  $license_ent = entity_load_single('commerce_license', $lid);
+              	$license_ent->expire();
+				}
+	 		}
+	}
+}
+
+$og_stamp = strtotime('-2 days'); // Remove User from OG group 2 days after license expiration. 
+$og = date('d/m/y',$og_stamp);
+	$res = db_query("SELECT * FROM commerce_license WHERE status <> 2");
+    		foreach($res as $r) {
+    			$uid = $r->uid;
+    			$expires_stamp = $r->expires;
+    			$expires = date('d/m/y',$expires_stamp);
+    			$expires_display = date('d M Y', $expires_stamp);
+    			if($og == $expires) {
+					$res1 = db_query("SELECT * FROM commerce_license WHERE uid = $uid AND status = 2");
+					$fl = 'false';
+					foreach($res1 as $r1) {
+						if(!empty($r1)) {
+							$fl = 'true';
+						}
+					}
+					if($fl == 'false') {
+						$edit = user_load($uid);
+				  		$edit->og_user_node = array();
+				  		user_save($edit);
+				  				$user_det = user_load($uid);
+	 							$user_mail = $user_det->mail;
+	 							$uname = $user_det->field_full_name['und'][0]['value'];
+	 							$to = $user_mail;
+								$subject = 'License Expiration Notification';
+								$message = '<div style="background: #8a8a8a;padding: 20px;">
+								<div style="width: 80%; margin: 0 auto; background: #f9ae1a; padding: 20px; color: #fff;">
+								<img src="http://dailysadhana.swamimukundananda.org/sites/all/themes/vedic/images/logo.png"/>
+								</div>
+								<div style="width: 80%; margin: 0 auto; background: #fff; padding: 20px;">
+								Hi '.$uname.',<br/>
+								Your License for '.$p_title.' has been expired on '.$expires_display.'.
+								</div>
+								<div style="width: 80%;margin: 0 auto;background: #052653;padding: 20px; color: #fff;">
+								--  '.variable_get('site_name').' team
+								</div>
+								</div>';
+								$headers = "Content-type:text/html;charset=UTF-8" . "\r\n";
+								$headers .= 'From: Daily Sadhana <info@mydailysadhana.org>' . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+								mail($to, $subject, $message, $headers);
+					}
+				}
+			}
+
+// Mail notification for inactive users after 7 days.
+
+$today = strtotime(date("Y-m-d 00:00:00"));
+$td = variable_get('inactive_users_for_week_dss');
+
+if($td != date("Y-m-d", $today)) {
+
+date("Y-m-d H:i:s", $today);
+$day6 = strtotime('-6 days', $today);
+date("Y-m-d H:i:s", $day6);
+$day8 = strtotime('-8 days', $today);
+date("Y-m-d H:i:s", $day8);
+$inactive_users_query = new EntityFieldQuery();
+$inactive_users_query->entityCondition('entity_type', 'user')
+	->propertyCondition('access', array($day8, $day6), 'BETWEEN');
+$inactive_users_results = $inactive_users_query->execute();
+
+$headers = "MIME-Version: 1.0" . "\r\n";
+$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+$headers .= 'From: Daily Sadhana <info@mydailysadhana.org>' . "\r\n";
+
+$subject = 'Reminder for inactive user';
+
+foreach ($inactive_users_results['user'] as $inactive_user) { 
+	$uid = $inactive_user->uid;
+	$link = $GLOBALS['base_url'];
+	$user = user_load($uid);
+	$user_mail = $user->mail;
+	$uname = $user->name;
+	$to = $user_mail;
+	
+	$message = '<div style="background: #8a8a8a;padding: 20px;">
+  <div style="width:80%;margin: 0 auto; background: #f9ae1a; padding: 20px; color: #fff;"> <img src="http://dailysadhana.swamimukundananda.org/sites/all/themes/vedic/images/logo.png" style="width: 680px;" /> </div>
+  <div style="width: 80%; margin: 0 auto; background: #fff; padding: 20px;">
+    <p>Hi '.$uname.',</p>
+   You have not logged in to your account for a week. <br> Log in from '.$link.'
+   </div>
+  <div style="width: 80%;margin: 0 auto;background: #052653;padding: 20px; color: #fff;"> -- '.variable_get('site_name').' team </div>
+</div>';
+
+ mail($to, $subject, $message, $headers);
+}
+
+$date_val = date("Y-m-d", $today);
+variable_set('inactive_users_for_week_dss',$date_val);
+}
+
+
+} //cron
+

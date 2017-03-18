@@ -1,0 +1,60 @@
+@import "variables/**/*";
+@import "mixins/**/*";
+
+.sprite {
+	&::before {
+		@include sprite-common();
+	}
+
+	&.flute::before {
+		@include sprite-flute();
+	}
+
+	&.bonus-icon::before {
+		@include sprite-bonus-icon();
+	}
+
+	&.feather-pen::before {
+		@include sprite-feather-pen();
+	}
+
+	&.header-feather::before {
+		@include sprite-header-feather();
+	}
+
+	&.header-flower::before {
+		@include sprite-header-flower();
+	}
+
+	&.leaves-down::before {
+		@include sprite-leaves-down();
+	}
+
+	&.leaves-left::before {
+		@include sprite-leaves-left();
+	}
+
+	&.leaves-right::before {
+		@include sprite-leaves-right();
+	}
+
+	&.leaves-up::before {
+		@include sprite-leaves-up();
+	}
+
+	&.quote-icon::before {
+		@include sprite-quote-icon();
+	}
+
+	&.title-decorative::before {
+		@include sprite-title-decorative();
+	}
+
+	&.user-icon::before {
+		@include sprite-user-icon();
+	}
+
+	&.welcome-decorative::before {
+		@include sprite-welcome-decorative();
+	}
+}

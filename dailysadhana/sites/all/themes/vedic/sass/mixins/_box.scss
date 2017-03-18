@@ -1,0 +1,14 @@
+
+@mixin shadow-box() {
+  overflow: hidden;
+  @include border-radius(2px);
+  border: 1px solid $border-grey;
+  // @include box-shadow(1px 1px 15px 5px $light-grey);
+  @include box-shadow(none);
+  @include transition(background-color, .4s, ease-in);
+
+  &:hover {
+    background-color: $light-grey-2;
+    // @include box-shadow(1px 1px 15px 5px darken($light-grey, 5%));
+  }
+}

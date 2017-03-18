@@ -1,0 +1,39 @@
+@import "../variables/**/*";
+
+@mixin page-width() {
+	@include breakpoint($tab) {
+		width: 85%;
+		max-width: 1260px;
+		margin: 0 auto;
+	}
+}
+
+@mixin modal-page-width() {
+	margin: 0 auto;
+	width: 100%;
+
+	@include breakpoint($desk) {
+		width: $desk;
+	}
+
+	@include breakpoint($large) {
+		width: $large;
+	}
+}
+
+@mixin segment-margin {
+	margin: 0 20px;
+
+	@include breakpoint($tab) {
+		margin: 0 30px;
+	}
+}
+
+
+@mixin segment-padding {
+	padding: 20px 20px;
+
+	@include breakpoint($tab) {
+		padding: 20px 30px;
+	}
+}

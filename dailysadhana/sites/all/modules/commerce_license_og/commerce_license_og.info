@@ -1,0 +1,14 @@
+name = Commerce License OG
+description = Provides a license type for selling memberships in Organic Groups.
+core = 7.x
+project = commerce_license_og
+package = Commerce (contrib)
+dependencies[] = commerce_license
+dependencies[] = og (2.x)
+
+; Information added by Drupal.org packaging script on 2014-10-31
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "commerce_license_og"
+datestamp = "1414767535"
+

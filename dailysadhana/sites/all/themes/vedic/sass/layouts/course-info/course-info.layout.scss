@@ -1,0 +1,250 @@
+// Import external libraries.
+@import "compass";
+@import "compass/css3/**";
+@import "breakpoint";
+@import "singularitygs";
+@import "toolkit";
+
+// Import variables, abstractions, base styles and components using globbing.
+//
+// Globbing will always import files alphabetically. Optimally, all your
+// components should be self-contained and explicit enough to not have any
+// contained styles leak into unrelated components: The import order should not
+// affect the result.
+//
+// If there are variables, functions or mixins that depend on each other and
+// therefore need to be imported in a specific order you can import them
+// directly. Variables-, function- or mixin providing partials should never
+// output any styles themselves: Importing them multiple times to resolve
+// dependencies shouldn't be a problem.
+@import "../../variables/**/*";
+@import "../../mixins/**/*";
+@import "../../components/ckeditor";
+
+body {
+	transition: margin .4s ease;
+
+	@include breakpoint(0 $tab) {
+
+		position: relative;
+
+		&.mobile-opened {
+			margin-left: $sidebar-mobile-width;
+			margin-right: -($sidebar-mobile-width);
+		}
+	}
+}
+
+img {
+	max-width: 100%;
+}
+
+.pane-page-content {
+
+	min-height: 100%;
+	// margin-top: $header-height;
+
+	> .pane-title {
+		display: none;
+	}
+
+	.contextual-links-region {
+		// position: static;
+	}
+
+	.ui.dimmer.active.pane-page-dimmer {
+		z-index: 100;
+
+		@include breakpoint($tab) {
+			display: none !important;
+		}
+	}
+}
+
+.course-content-items.ui.vertical.menu {
+	background-color: rgba($sidebar-sub-links-bg-color, .7);
+	max-height: 150px;
+	overflow-y: auto;
+
+	.item {
+		font-size: 1em;
+		padding-left: .5em;
+		color: rgba($sidebar-sub-links-color, .7);
+
+		&:hover {
+			background-color: rgba($sidebar-sub-links-bg-color, 1);
+			color: rgba($sidebar-sub-links-color, 1);
+		}
+	}
+}
+
+.course-title {
+	a {
+		color: rgba($white, .9);
+
+		&:hover {
+			color: $white;
+		}
+	}
+}
+
+.instructors {
+	color: rgba($white, .5);
+}
+
+.course-item-description {
+	margin: 2em 0;
+	// font-size: 1.02em;
+}
+
+.ui.dimmer {
+	background-color: rgba(50, 50, 50, .9);
+}
+
+.ui.button {
+	.icon.right {
+		float: right;
+		margin-left: .5em;
+	}
+}
+
+.ui.progress-header {
+	line-height: 2em;
+}
+
+.ui.cards {
+	margin: 0;
+}
+
+.ui.card.course-card {
+
+	@include shadow-box;
+	// border-top: none;
+	// border-right: none;
+	// border-left: none;
+
+	&:hover {
+		@include breakpoint($tab) {
+			.image > div {
+				opacity: 1;
+				@include scale(1.05);
+			}
+		}
+	}
+
+	@include breakpoint($mobile ($desk - 1)) {
+		@include add-gutter(1);
+		@include float-span(6, $gutter: 1);
+		padding-bottom: 0;
+		margin-bottom: 2em;
+
+		&:nth-child(2n+2) {
+	    @include float-span(6, last);
+	  }
+	}
+
+	.ui.button {
+		@include btn-1;
+		font-weight: bold;
+	    padding: .5em 1em;
+	    font-size: 1.1em;
+	}
+
+	@include breakpoint($desk) {
+		@include add-gutter(1);
+		@include float-span(4);
+		padding-bottom: 0;
+		margin-bottom: 2em;
+
+		&:nth-child(3n+3) {
+	    @include float-span(4, last);
+	  }
+	}
+	// width: 100%;
+	// margin: 0 0 3em;
+	//
+	// @include breakpoint($desk) {
+	// 	width: 46%;
+	// 	margin: 0 4% 3em 0;
+	// }
+	.edit-link {
+		color: rgba($white, .6);
+		display: inline;
+	}
+
+	.ui.tag.label {
+		font-size: .65em;
+	}
+
+	.image {
+		overflow: hidden;
+
+		> div {
+			background-size: cover;
+			background-position: center top;
+			opacity: .9;
+			@include transition(transform .4s ease-out, opacity .4s ease-out);
+		}
+	}
+
+	.image,
+	.image > div {
+		height: 150px;
+	}
+
+	.meta {
+		font-size: 1.15em;
+		font-weight: bold;
+		text-align: center;
+		margin-bottom: .5em;
+		color: $theme-color-1;
+	}
+
+	.header {
+		text-align: center;
+
+		> a {
+			color: $theme-color-1;
+			font-weight: bold;
+			display: block;
+			width: 100%;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	.content {
+		background-color: $logo-color-light;
+	}
+
+	.description {
+		clear: none;
+	}
+
+	.extra.content {
+		line-height: 2.5rem;
+		background-color: $light-grey;
+		font-weight: bold;
+		color: $theme-color-1;
+		// border: 1px solid $border-grey;
+	}
+}
+
+.cover-image {
+	img {
+		display: block;
+		width: 100%;
+		opacity: .95;
+	}
+}
+
+// @include breakpoint($tab) {
+// 	.cards-content {
+// 		@include grid-span(11, 1);
+// 	}
+//
+// 	.cover-image {
+// 		@include grid-span(5, 12);
+// 	}
+// }

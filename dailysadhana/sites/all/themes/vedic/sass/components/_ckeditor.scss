@@ -1,0 +1,378 @@
+@include breakpoint($tab) {
+	table {
+		max-width: 100%;
+	}
+}
+
+img {
+	max-width: 100%;
+}
+
+figure {
+	margin: 0;
+	border: 1px solid $border-grey;
+
+	@include breakpoint($tab) {
+		display: inline-block;
+	}
+
+	> br {
+		display: none;
+	}
+
+	img {
+		@include breakpoint(0 $tab) {
+			width: 100%;
+		}
+	}
+
+	figcaption {
+		text-align: center;
+		box-sizing: border-box;
+		padding: .5em 1em;
+		background-color: $light-grey;
+		color: $text-grey;
+	}
+}
+
+blockquote {
+	color: $theme-color-1-dark-1;
+	padding: 1em 5em;
+	margin: 1em 0;
+	border: 1px solid $border-grey;
+	background-color: $light-grey;
+	@include border-radius(8px);
+	// box-shadow: 1px 1px 10px rgba($dark-blue, .3);
+
+	&::before {
+		content: '';
+		font-family: Icons;
+		color: rgba(77, 107, 146, 0.3);
+		font-size: 2.5em;
+		position: absolute;
+		left: 1em;
+	}
+
+	.rteright {
+		font-size: .9em;
+		font-weight: bold;
+		color: $text-grey;
+	}
+}
+
+table {
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+/* General indentation & positioning classes */
+
+.rteindent1 {
+	margin-left: 40px;
+}
+
+.rteindent2 {
+	margin-left: 80px;
+}
+
+.rteindent3 {
+	margin-left: 120px;
+}
+
+.rteindent4 {
+	margin-left: 160px;
+}
+
+.rteleft {
+	text-align: left;
+}
+
+.rteright {
+	text-align: right;
+}
+
+.rtecenter {
+	text-align: center;
+}
+
+.rtejustify {
+	text-align: justify;
+}
+
+.ibimage_left {
+	float: left;
+}
+
+.ibimage_right {
+	float: right;
+}
+
+.orange-bullets,
+.editor-content,
+.ui.modal.course-content-modal,
+.cke_editable {
+
+	text-align: justify;
+
+	img {
+		height: auto;
+	}
+
+	ul {
+		list-style: none;
+		text-indent: -.5em;
+
+		> li {
+			// text-indent: -.5em; // Only for ul
+
+			&::before {
+				content: '♦';
+				// padding-right: 1em;
+				color: $orange;
+				position: relative;
+				right: .5em;
+			}
+		}
+
+		ol {
+			margin-left: .6em; // adjustment
+			text-indent: 0;
+		}
+
+		ul {
+			li {
+				&::before {
+					content: '●';
+				}
+			}
+		}
+	}
+
+	ul,
+	ol {
+		text-align: justify;
+
+		li {
+			margin-bottom: .5em;
+		}
+
+		ul,
+		ol {
+			margin-top: .5em;
+		}
+	}
+}
+
+/* Custom class styling for CKEditor */
+
+.img-center {
+	text-align: center;
+	max-width: 60%;
+	margin: 0 auto;
+
+	img {
+		display: inline;
+	}
+
+	@include breakpoint($tab) {
+		max-width: none;
+	}
+}
+
+.img-full {
+	display: block;
+	text-align: center;
+	max-width: 60%;
+	margin: 0 auto;
+
+	@include breakpoint($tab) {
+		max-width: none;
+		width: 100%;
+	}
+}
+
+.img-left {
+	max-width: 60%;
+	margin: 0 auto;
+
+	@include breakpoint($tab) {
+		max-width: none;
+		float: left;
+		height: auto !important;
+		margin: 0 2em 2em 0;
+	}
+}
+
+.img-right {
+	max-width: 60%;
+	margin: 0 auto;
+
+	@include breakpoint($tab) {
+		float: right;
+		height: auto !important;
+		margin: 0 0 2em 2em;
+	}
+}
+
+.side-by-side-table {
+
+	display: block;
+	clear: both;
+	max-width: 100%;
+
+	th,
+	td {
+		text-align: center;
+	}
+
+	img {
+		display: block;
+		margin: 0 auto;
+	}
+
+	@include breakpoint(0 $tab) {
+
+		margin-bottom: 0;
+
+		th,
+		td {
+			display: block;
+			float: left;
+			width: 100% !important;
+			text-align: center;
+			padding-bottom: 1em;
+		}
+	}
+
+	@include breakpoint($tab) {
+
+		// display: table;
+		// table-layout: fixed;
+
+		th,
+		td {
+			padding: 0 .5em;
+
+			&:first-child {
+				padding-left: 0;
+			}
+
+			&:last-child {
+				padding-right: 0;
+			}
+		}
+	}
+}
+
+.fixed-layout {
+	table-layout: fixed;
+	border: 0;
+
+	td,
+	th {
+		border: 0;
+	}
+
+	th {
+		text-align: center;
+	}
+
+	td {
+		text-align: left;
+	}
+}
+
+.info-table,
+.info-table.fixed-layout {
+
+	border: 1px solid $border-grey;
+	width: 100%;
+	margin-bottom: 2em;
+	border-collapse: collapse;
+	border-spacing: 0;
+	line-height: 2;
+
+	tr {
+		border-top: 1px dotted $border-grey;
+	}
+
+	td,
+	th {
+		border-left: 1px dotted $border-grey;
+	}
+
+	td {
+		padding: .8em 1em;
+	}
+
+	th {
+		padding: 1em;
+		text-transform: uppercase;
+		text-align: center;
+		background-color: $dark-blue;
+		color: rgba($white, .9);
+		font-weight: normal;
+	}
+}
+
+.text-center {
+	text-align: center;
+}
+
+.slide-heading {
+	display: block;
+	text-align: center;
+	font-size: 1.5em;
+	color: $theme-color-1-dark-1;
+	margin-bottom: 1.2em;
+
+	&::after {
+		bottom: -25%;
+	}
+
+	&,
+	&.strong {
+		font-weight: 500;
+	}
+}
+
+.slide-subheading {
+	display: block;
+	text-align: left;
+	font-size: 1.1em;
+	color: $slide-subheading-color;
+	border-bottom: 2px solid $slide-subheading-border-color;
+	padding: .5em 0;
+}
+
+/* Anything inside this will be applicable only for the editor in admin area */
+.cke_editable {
+
+	.fixed-layout {
+		border: 2px dotted #eee;
+
+		td, th {
+			border: 2px dotted #eee;
+		}
+	}
+
+	table {
+		td, th {
+			min-width: 2em;
+		}
+	}
+
+}
+
+/* Anything inside this will be applicable only for the website */
+.editor-content {
+
+}
+
+/* Anything inside this will be applicable for both, editor and the editor-content, but not anywhere else on the website */
+.cke_editable,
+.editor-content {
+	p {
+		// text-align: justify;
+	}
+}

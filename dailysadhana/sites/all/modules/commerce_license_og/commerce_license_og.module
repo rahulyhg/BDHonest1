@@ -1,0 +1,190 @@
+<?php
+
+/**
+ * @file
+ * Provides a license type for selling memberships in Organic Groups.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function commerce_license_og_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'commerce_license') {
+    return "plugins/$plugin_type";
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function commerce_license_og_menu() {
+  $items['admin/commerce/config/license/og'] = array(
+    'title' => 'Organic Groups',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('commerce_license_og_settings_form'),
+    'access arguments' => array('administer licenses'),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/commerce_license_og.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Return a list of all entity types which contain at least one instance of
+ *   the 'og_group' field, i.e. can be treated as an Organic Group.
+ *
+ * We use this for the #options list on our settings form for each product
+ *   type.
+ *
+ * @return
+ *   An array of entity type machine names.
+ */
+function commerce_license_og_entity_types() {
+  $map = field_info_field_map();
+  if (empty($map[OG_GROUP_FIELD]) || empty($map[OG_GROUP_FIELD]['bundles'])) {
+    return array();
+  }
+  $types = array_keys($map[OG_GROUP_FIELD]['bundles']);
+  $results = array();
+  foreach ($types as $type) {
+    $info = entity_get_info($type);
+    $results[$type] = $info['label'];
+  }
+  return $results;
+}
+
+/**
+ * Return a list of cl_og field names that we have instantiated.
+ */
+function commerce_license_og_field_names() {
+  $map = field_info_field_map();
+  $field_names = array_keys($map);
+
+  $results = array();
+  foreach ($field_names as $field_name) {
+    if (strpos($field_name, 'cl_og_') === 0) {
+      $results[] = $field_name;
+    }
+  }
+
+  return $results;
+}
+
+/**
+ * Return a list of product types used for OG licensing.
+ *
+ * @return
+ *   An array of product type machine names.
+ */
+function commerce_license_og_product_types($product_bundle = NULL) {
+  $og_product_types = variable_get('commerce_license_og_product_types', array());
+  $og_product_types = array_filter($og_product_types, '_commerce_license_og_enabled_product_type');
+  // Return only those $og_product_types that are still licensable.
+  $license_product_types = array_flip(commerce_license_product_types());
+
+  $available = array_intersect_key($og_product_types, $license_product_types);
+  if (empty($product_bundle)) {
+    return $available;
+  }
+  else {
+    return (isset($available[$product_bundle]) ? $available[$product_bundle] : FALSE);
+  }
+}
+
+/**
+ * Callback for array_filter on enabled product_types.
+ */
+function _commerce_license_og_enabled_product_type($type) {
+  return $type['enabled'];
+}
+
+/**
+ * Implements hook_commerce_license_types_list_alter().
+ *
+ * Removes the OG license type option from those product types that don't
+ * have it enabled.
+ */
+function commerce_license_og_commerce_license_types_list_alter(&$types, $product) {
+  $og_product_types = commerce_license_og_product_types();
+  $enabled_settings = array_filter($og_product_types, '_commerce_license_og_enabled_product_type');
+
+  if (!empty($product) && !in_array($product->type, array_keys($enabled_settings))) {
+    unset($types['og']);
+  }
+}
+
+/**
+ * Implements hook_flush_caches().
+ *
+ * Ensures that products have the required commerce_license_og field.
+ */
+function commerce_license_og_flush_caches() {
+  $product_types = commerce_license_og_product_types();
+  commerce_license_og_configure_product_types($product_types);
+}
+
+/**
+ * Gets a helper function from an og product type settings array.
+ */
+function commerce_license_og_field_name($type_settings) {
+  // We use a shortened field name just in case the type name is unwieldy.
+  return 'cl_og_' . $type_settings['entity_type'];
+}
+
+/**
+ * Ensures that the provided product types have the required fields.
+ *
+ * Fields:
+ * - cl_og_[entity_type]: a specially-created OG entityreference field.
+ *
+ * @param $types
+ *   Array of product type settings from commerce_license_og_product_types().
+ */
+function commerce_license_og_configure_product_types($types) {
+  // The commerce_license_role module has to do a bunch of work here to
+  //   instantiate its custom role field on enabled product types. Lucky for
+  //   us, OG provides a convenient wrapper on the field API. To wit:
+
+  // First we group up our desired license product bundles by field name,
+  //   which is determined by the entity type they will target.
+  $fields = array();
+  foreach ($types as $product_bundle => $type_settings) {
+    $field_name = commerce_license_og_field_name($type_settings);
+    $fields[$field_name][$product_bundle] = $type_settings;
+  }
+  // Make sure we at least glance at all of our fields to de-instantiate
+  //   any product bundles we just turned off.
+  foreach (commerce_license_og_field_names() as $field_name) {
+    if (!isset($fields[$field_name])) {
+      $fields[$field_name] = array();
+    }
+  }
+
+  foreach ($fields as $field_name => $product_types) {
+
+    $current_field = field_info_field($field_name);
+    $existing_bundles = array();
+    if (!empty($current_field['bundles']['commerce_product'])) {
+      $existing_bundles = $current_field['bundles']['commerce_product'];
+    }
+
+    foreach (array_diff(array_keys($product_types), $existing_bundles) as $new_bundle) {
+      $og_field = og_fields_info(OG_AUDIENCE_FIELD);
+      $og_field['field']['settings']['target_type'] = $product_types[$new_bundle]['entity_type'];
+      $og_field['instance']['label'] = t('Licensed groups');
+      $og_field['instance']['settings']['behaviors']['og_widget']['admin']['widget_type'] = 'options_buttons';
+
+      og_create_field($field_name, 'commerce_product', $new_bundle, $og_field);
+    }
+
+    foreach (array_diff($existing_bundles, array_keys($product_types)) as $removed_bundle) {
+      $instance = field_info_instance('commerce_product', $field_name, $removed_bundle);
+      field_delete_instance($instance, TRUE);
+    }
+  }
+
+  // @todo: Role selector field! With AJAX! Oof.
+
+}
+

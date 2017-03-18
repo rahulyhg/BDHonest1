@@ -1,0 +1,11 @@
+/* line 22, ../../../sass/layouts/course-info/course-info-quiz.scss */
+.bx-wrapper {
+  margin: 0 !important; }
+
+/* line 13, ../../../../../../../../../../../Library/Ruby/Gems/2.0.0/gems/toolkit-2.9.0/stylesheets/toolkit/_clearfix.scss */
+.quiz-questions .question:after {
+  content: "";
+  display: table;
+  clear: both; }
+
+/*# sourceMappingURL=course-info-quiz.css.map */

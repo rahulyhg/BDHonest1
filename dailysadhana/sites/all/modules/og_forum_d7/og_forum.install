@@ -1,0 +1,70 @@
+<?php
+
+/**
+ * @file
+ * OG Forum install
+ */
+
+/**
+ * Implements hook_install().
+ */
+function og_forum_install() {
+
+  // Add group audience and visibility to forum taxonomy terms.
+  if ($vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', 0))) {
+    og_create_field(OG_AUDIENCE_FIELD, 'taxonomy_term', $vocabulary->machine_name);
+    og_create_field(OG_CONTENT_ACCESS_FIELD, 'taxonomy_term', $vocabulary->machine_name);
+  }
+  else {
+    throw new DrupalUpdateException('This module needs to attach a field to the Forums vocabulary and was not able to do it.');
+  }
+
+  // Add group audience and group visibility to topic.
+  if (array_key_exists('forum', field_info_bundles('node'))) {
+    og_create_field(OG_AUDIENCE_FIELD, 'node', 'forum');
+    og_create_field(OG_CONTENT_ACCESS_FIELD, 'node', 'forum');
+  }
+  else {
+    throw new DrupalUpdateException('This module needs to attach fields to the Forum bundle and was not able to do it.');
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function og_forum_uninstall() {
+  // Remove Group Audience from Forum Taxonomy Term
+  $field_name = OG_AUDIENCE_FIELD;
+  $entity_type = 'taxonomy_term';
+  $vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', 0));
+  if (isset($vocabulary->machine_name)) {
+    $bundle_name = $vocabulary->machine_name;
+    if ($instance = field_info_instance($entity_type, $field_name, $bundle_name)) {
+      field_delete_instance($instance);
+    }
+  }
+
+  // Remove Group Audience and Group Visibility from Forum Topic
+  $entity_type = 'node';
+  $bundle_name = 'forum';
+  if ($instance = field_info_instance($entity_type, $field_name, $bundle_name)) {
+    field_delete_instance($instance);
+  }
+  $field_name = OG_CONTENT_ACCESS_FIELD;
+  if ($instance = field_info_instance($entity_type, $field_name, $bundle_name)) {
+    field_delete_instance($instance);
+  }
+}
+
+/**
+ * Implements hook_update_N().
+ */
+function og_forum_update_7000() {
+  // Add group visibility to forum taxonomy terms.
+  if ($vocabulary = taxonomy_vocabulary_load(variable_get('forum_nav_vocabulary', 0))) {
+    og_create_field(OG_CONTENT_ACCESS_FIELD, 'taxonomy_term', $vocabulary->machine_name);
+  }
+  else {
+    throw new DrupalUpdateException('This module needs to attach a field to the Forums vocabulary and was not able to do it.');
+  }
+}
