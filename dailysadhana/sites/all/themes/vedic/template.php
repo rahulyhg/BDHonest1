@@ -20,17 +20,28 @@ function vedic_follow_link($variables) {
   return l($title, $link->path, $link->options) . "\n";
 }
 
-function vedic_theme() {
-  return array(
-    'user_login' => array(
-      'template' => 'user-login',
-      'variables' => array('form' => NULL), ## you may remove this line in this case
-    )
+/**
+ * 
+ * Implements hook_theme().
+ */
+function vedic_theme(){
+  $hooks = array();
+  $hooks['user_register_form'] = array (
+     'render element' => 'form',
+     'path' => drupal_get_path('theme','vedic'),
+     'template' => 'templates/user--register',
+     'preprocess functions' => array('vedic_preprocess_user_register_form'),
   );
+  return $hooks;
 }
 
-
-
-function vedic_preprocess_user_login(&$variables) {
-	$variables['form'] = drupal_build_form('user_login', user_login(array(),$form_state)); ## I have to build the user login myself.
+/**
+ * 
+ * Implements theme_preprocess_user_register_form().
+ */
+function vedic_preprocess_user_register_form(&$vars) {
+  $args = func_get_args();
+  array_shift($args);
+  $form_state['build_info']['args'] = $args;
+  $vars['form'] = drupal_build_form('user_register_form', $form_state['build_info']['args']);
 }
